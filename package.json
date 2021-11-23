@@ -1,0 +1,11 @@
+{
+  "name": "volgnie",
+  "version": "0.0.0",
+  "description": "A fresh new Architect project!",
+  "scripts": {
+    "start": "npx sandbox"
+  },
+  "devDependencies": {
+    "@architect/architect": "^9.4.0"
+  }
+}
