@@ -1,0 +1,99 @@
+service: volgnie
+# app and org for use with dashboard.serverless.com
+#app: your-app-name
+#org: your-org-name
+
+frameworkVersion: '^2.66'
+
+plugins:
+- serverless-offline
+
+provider:
+  name: aws
+  runtime: ruby2.7
+  memorySize: 256
+  logRetentionInDays: 30
+  lambdaHashingVersion: 20201221
+  timeout: 30
+  region: us-east-1
+  apiGateway:
+    shouldStartNameWithService: false
+  environment:
+    TWITTER_API_KEY: ${env:TWITTER_API_KEY}
+    TWITTER_API_KEY_SECRET: ${env:TWITTER_API_KEY_SECRET}
+    TWITTER_CALLBACK_URL: ${env:TWITTER_CALLBACK_URL}
+    REDIS_HOSTNAME: ${env:REDIS_HOSTNAME}
+    REDIS_PORT: ${env:REDIS_PORT}
+    REDIS_PASSWORD: ${env:REDIS_PASSWORD}
+    EXTERNAL_URL: ${env:EXTERNAL_URL}
+    SENTRY_DSN: ${env:SENTRY_DSN}
+    APP_ENV: ${env:APP_ENV}
+    TOPIC_ARN:
+      "Fn::Join":
+      - ':'
+      - - "arn:aws:sns"
+        - Ref: AWS::AccountId
+        - Ref: AWS::Region
+        - "__topic__"
+
+package:
+  patterns:
+  - '!docs/**'
+  - '!package.json'
+  - '!package-lock.json'
+  - '!node_modules'
+  - src/**
+  - views/**
+  - vendor/bundle/**
+  - .bundle/**
+
+functions:
+  index:
+    handler: handler.index
+    events:
+    - httpApi:
+        path: /
+        method: get
+    iamRoleStatements:
+    - Effect: Allow
+      Action:
+      - sns:Publish
+      Resource:
+      - "Fn::Join":
+        - ':'
+        - - "arn:aws:sns"
+          - Ref: AWS::Region
+          - Ref: AWS::AccountId
+          - "purge_start"
+  start_purge:
+    handler: handler.start_purge
+    events:
+    - sns: purge_start
+    iamRoleStatements:
+    - Effect: Allow
+      Action:
+      - sns:Publish
+      Resource:
+      - "Fn::Join":
+        - ':'
+        - - "arn:aws:sns"
+          - Ref: AWS::Region
+          - Ref: AWS::AccountId
+          - "purge_finish"
+    - Effect: "Allow"
+      Action:
+      - "events:DeleteRule"
+      - "events:RemoveTargets"
+      - "events:PutRule"
+      - "events:PutTargets"
+      Resource:
+      - "*"
+    - Effect: Allow
+      Action:
+      - cloudwatch:PutMetricData
+      Resource:
+      - "*"
+  send_report:
+    handler: handler.send_report
+    events:
+    - sns: purge_finish
