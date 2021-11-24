@@ -31,7 +31,7 @@ provider:
     REDIS_PORT: ${env:REDIS_PORT}
     REDIS_PASSWORD: ${env:REDIS_PASSWORD}
     EXTERNAL_URL: ${env:EXTERNAL_URL}
-    SENTRY_DSN: ${env:SENTRY_DSN}
+    HONEYBADGER_API_KEY: ${env:HONEYBADGER_API_KEY}
     APP_ENV: ${env:APP_ENV}
     TOPIC_ARN:
       "Fn::Join":
@@ -47,7 +47,7 @@ package:
   - '!package.json'
   - '!package-lock.json'
   - '!node_modules'
-  - src/**
+  - app/**
   - views/**
   - vendor/bundle/**
   - .bundle/**

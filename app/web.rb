@@ -1,5 +1,7 @@
 require 'sinatra'
 
+set :views, settings.root + '/../views'
+
 get '/' do
   # puts request.env['serverless.event']
   # puts request.env['serverless.context']

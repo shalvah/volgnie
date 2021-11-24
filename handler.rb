@@ -1,19 +1,5 @@
 require 'json'
 
-def index(event:, context:)
-  {
-    statusCode: 200,
-    headers: {
-      'cache-control': 'no-cache, no-store, must-revalidate, max-age=0, s-maxage=0',
-      'content-type': 'text/html; charset=utf8'
-    },
-    body: {
-      message: 'Go Serverless v1.0! Your function executed successfully!',
-      input: event
-    }.to_json
-  }
-end
-
 def handler
   user_twitter_creds = get_user_twitter_creds
   user_config = get_user_config
@@ -21,22 +7,21 @@ def handler
   following = get_following(user_twitter_creds)
   store_following(following)
 
-  get_followers_chunks(user_twitter_creds).each do |followers_set|
-    # race condition, atomicity
-    dispatch_event(:check_followers, followers_set)
+  batches_dispatched = 0
+  complete = false
+  begin
+    get_followers_chunks(user_twitter_creds, user).each do |followers_set|
+      # race condition, atomicity
+      dispatch_event(:followers_batch, followers_set)
+      batches_dispatched += 1
+    end
+    complete = true
+  ensure
+    record_expected_batches(batches_dispatched, complete)
   end
-
-  {
-    statusCode: 200,
-    headers: {
-      'cache-control': 'no-cache, no-store, must-revalidate, max-age=0, s-maxage=0',
-      'content-type': 'text/html; charset=utf8'
-    },
-    body: "Hi"
-  }
 end
 
-def check_followers
+def purge_batch
   followers.each do |follower|
     next if (user.is_following(follower))
 
@@ -48,6 +33,15 @@ def check_followers
     record_removal(follower, user)
   end
 
-  send_email_if_last_batch
-  clear_users_data
+  record_batch_processed
+  if is_last_batch && batches_complete
+    dispatch_event(:purge_finish, user)
+  end
+end
+
+def finish_purge
+  purged_users = fetch_purged_users(user)
+  send_email_report(user, purged_users)
+  report_metrics
+  clear_users_data(user)
 end
