@@ -7,6 +7,11 @@ frameworkVersion: '^2.66'
 
 plugins:
 - serverless-offline
+- serverless-rack
+
+custom:
+  rack:
+    bundlerBin: C:\\Ruby27-x64\\bin\\bundle.bat
 
 provider:
   name: aws
@@ -48,12 +53,11 @@ package:
   - .bundle/**
 
 functions:
-  index:
-    handler: handler.index
+  WEB:
+    handler: rack_adapter.handler
     events:
-    - httpApi:
-        path: /
-        method: get
+      - http: ANY /
+      - http: ANY {proxy+}
     iamRoleStatements:
     - Effect: Allow
       Action:
@@ -65,35 +69,36 @@ functions:
           - Ref: AWS::Region
           - Ref: AWS::AccountId
           - "purge_start"
-  start_purge:
-    handler: handler.start_purge
-    events:
-    - sns: purge_start
-    iamRoleStatements:
-    - Effect: Allow
-      Action:
-      - sns:Publish
-      Resource:
-      - "Fn::Join":
-        - ':'
-        - - "arn:aws:sns"
-          - Ref: AWS::Region
-          - Ref: AWS::AccountId
-          - "purge_finish"
-    - Effect: "Allow"
-      Action:
-      - "events:DeleteRule"
-      - "events:RemoveTargets"
-      - "events:PutRule"
-      - "events:PutTargets"
-      Resource:
-      - "*"
-    - Effect: Allow
-      Action:
-      - cloudwatch:PutMetricData
-      Resource:
-      - "*"
-  send_report:
-    handler: handler.send_report
-    events:
-    - sns: purge_finish
+#  start_purge:
+#    handler: handler.start_purge
+#    events:
+#    - sns: purge_start
+#    iamRoleStatements:
+#    - Effect: Allow
+#      Action:
+#      - sns:Publish
+#      Resource:
+#      - "Fn::Join":
+#        - ':'
+#        - - "arn:aws:sns"
+#          - Ref: AWS::Region
+#          - Ref: AWS::AccountId
+#          - "purge_finish"
+#    - Effect: "Allow"
+#      Action:
+#      - "events:DeleteRule"
+#      - "events:RemoveTargets"
+#      - "events:PutRule"
+#      - "events:PutTargets"
+#      Resource:
+#      - "*"
+#    - Effect: Allow
+#      Action:
+#      - cloudwatch:PutMetricData
+#      Resource:
+#      - "*"
+#  send_report:
+#    handler: handler.send_report
+#    events:
+#    - sns: purge_finish
+#

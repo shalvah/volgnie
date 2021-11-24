@@ -2,3 +2,5 @@ node_modules/
 .idea/
 preferences.arc
 .env
+.serverless-rack-temp
+vendor/bundle

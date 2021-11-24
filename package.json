@@ -1,8 +1,10 @@
 {
   "scripts": {
-    "offline": "serverless offline --noPrependStageInUrl --httpPort 9787"
+    "offline:rebuild": "sls rack install",
+    "offline": "serverless offline --noPrependStageInUrl --httpPort 9787",
   },
   "devDependencies": {
-    "serverless-offline": "^8.3.0"
+    "serverless-offline": "^8.3.0",
+    "serverless-rack": "^1.0.7"
   }
 }
