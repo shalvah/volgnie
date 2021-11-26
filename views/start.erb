@@ -1,0 +1,15 @@
+<html lang="en">
+
+Ready to begin, <%= current_user["username"] %>?
+
+<form action="/purge/start" method="post">
+  <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
+
+  <div>
+    <button type="submit">
+      Purge my followers
+    </button>
+  </div>
+</form>
+
+</html>

@@ -22,7 +22,7 @@ get '/' do
   # puts request.env['serverless.event']
   # puts request.env['serverless.context']
 
-  erb :index, locals: { csrf_token: session[:csrf] } #
+  erb :index
 end
 
 twitter = TwitterApi.new(
@@ -56,7 +56,14 @@ end
 
 get '/purge/start' do
   redirect '/' if !current_user
-  erb "Ready to begin, #{current_user["username"]}?"
+  erb :start
+end
+
+post '/purge/start' do
+  redirect '/' if !current_user
+
+  # Dispatch event
+  redirect '/purge/started'
 end
 
 # TODO
@@ -74,6 +81,6 @@ end
 
 # User clicked "Cancel"
 get '/auth/failure' do
-  session[:flash] = {error: "Something went wrong. Please try logging in again."}
+  set_flash_error "Something went wrong. Please try logging in again."
   redirect "/"
 end

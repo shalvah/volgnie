@@ -2,10 +2,9 @@
 
 <h1>Yo, it's Volgnie</h1>
 
-<% if session[:flash] && session[:flash][:error] %>
+<% if has_flash_error %>
   <div>
-    Error: <%= session[:flash][:error] %>
-    <% session[:flash][:error] = nil %>
+    Error: <%= get_flash_error %>
   </div>
 <% end %>
 
@@ -30,4 +29,5 @@
     </div>
   </form>
 </div>
+
 </html>
