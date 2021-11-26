@@ -1,9 +1,27 @@
 <html lang="en">
 
-Ready to begin, <%= current_user["username"] %>?
+<p>
+  Hi, <%= current_user["username"] %>!
+</p>
+
+<p>
+  You have <b><%= current_user["public_metrics"]["followers_count"] %></b> followers.
+</p>
+
+<p>
+  We'll go through <%= current_user_follower_limit_text %> followers and remove those who haven't interacted with you in
+  3 months. Then we'll send you a report of the followers we removed, via email.
+</p>
+
+Ready to begin?
 
 <form action="/purge/start" method="post">
   <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
+
+  <label>
+    Where should we send the report to?
+    <input type="email" name="email" placeholder="your email address" required>
+  </label>
 
   <div>
     <button type="submit">

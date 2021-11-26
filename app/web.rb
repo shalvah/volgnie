@@ -1,7 +1,10 @@
+# frozen_string_literal: true
+
 require 'sinatra'
 require 'omniauth'
 require 'omniauth/strategies/twitter'
 require 'rack/protection'
+require 'redis'
 require_relative './helpers'
 require_relative '../lib/twitter'
 
@@ -29,11 +32,19 @@ twitter = TwitterApi.new(
   ENV.fetch('TWITTER_API_KEY'),
   ENV.fetch('TWITTER_API_KEY_SECRET'),
 )
+redis_options = {
+  host: ENV.fetch('REDIS_HOSTNAME'),
+  port: ENV.fetch('REDIS_PORT'),
+  db: default_if_empty(ENV["REDIS_DB"], 0),
+  timeout: 10,
+}
+redis_options[:password] = ENV['REDIS_PASSWORD'] unless really_empty?(ENV.fetch('REDIS_PASSWORD'))
+redis = Redis.new(redis_options)
+
 get '/auth/twitter/callback' do
   cache_control :no_store
 
   auth_info = request.env['omniauth.auth']
-
   creds = auth_info.credentials
   # User will be something like
   # {
@@ -50,37 +61,41 @@ get '/auth/twitter/callback' do
   #     "protected": false
   # }
   session[:user] = twitter.as_user(creds[:token], creds[:secret]).get_user(auth_info.uid)["data"]
-  # save_user(creds, session[:user])
+  two_days = 2 * 24 * 60 * 60
+  redis.multi do
+    redis.set("keys-#{auth_info.uid}", creds.to_h, ex: two_days)
+    redis.set("user-#{auth_info.uid}", session[:user], ex: two_days)
+  end
   redirect '/purge/start'
-end
+  end
 
-get '/purge/start' do
-  redirect '/' if !current_user
-  erb :start
-end
+  # User clicked "Cancel" on Twitter's Authorization page
+  get '/auth/failure' do
+    set_flash_error "Something went wrong. Please try logging in again."
+    redirect "/"
+  end
 
-post '/purge/start' do
-  redirect '/' if !current_user
+  get '/purge/start' do
+    redirect '/' if !current_user
+    erb :start
+  end
 
-  # Dispatch event
-  redirect '/purge/started'
-end
+  post '/purge/start' do
+    redirect '/' if !current_user
 
-# TODO
-set :show_exceptions, false
+    # Dispatch event
+    erb :started
+  end
 
-error do
-  content_type :json
-  status 500
+  # TODO
+  set :show_exceptions, false
 
-  e = env['sinatra.error']
-  response = { error: e.message, trace: e.backtrace }
-  response.delete(:trace) if settings.production?
-  response.to_json
-end
+  error do
+    content_type :json
+    status 500
 
-# User clicked "Cancel"
-get '/auth/failure' do
-  set_flash_error "Something went wrong. Please try logging in again."
-  redirect "/"
-end
+    e = env['sinatra.error']
+    response = { error: e.message, trace: e.backtrace }
+    response.delete(:trace) if settings.production?
+    response.to_json
+  end
