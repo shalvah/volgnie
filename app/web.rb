@@ -55,6 +55,7 @@ get '/auth/twitter/callback' do
 end
 
 get '/purge/start' do
+  redirect '/' if !current_user
   erb "Ready to begin, #{current_user["username"]}?"
 end
 
