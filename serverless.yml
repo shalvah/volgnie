@@ -4,6 +4,7 @@ service: volgnie
 #org: your-org-name
 
 frameworkVersion: '^2.66'
+useDotenv: true
 
 plugins:
 - serverless-offline
@@ -24,13 +25,14 @@ provider:
   apiGateway:
     shouldStartNameWithService: false
   environment:
+    SESSION_SECRET: ${env:SESSION_SECRET}
     TWITTER_API_KEY: ${env:TWITTER_API_KEY}
     TWITTER_API_KEY_SECRET: ${env:TWITTER_API_KEY_SECRET}
     TWITTER_CALLBACK_URL: ${env:TWITTER_CALLBACK_URL}
     REDIS_HOSTNAME: ${env:REDIS_HOSTNAME}
     REDIS_PORT: ${env:REDIS_PORT}
     REDIS_PASSWORD: ${env:REDIS_PASSWORD}
-    EXTERNAL_URL: ${env:EXTERNAL_URL}
+    BASE_URL: ${env:BASE_URL}
     HONEYBADGER_API_KEY: ${env:HONEYBADGER_API_KEY}
     APP_ENV: ${env:APP_ENV}
     TOPIC_ARN:
@@ -47,56 +49,62 @@ package:
   - '!package.json'
   - '!package-lock.json'
   - '!node_modules'
+  - '!.env.*'
+  - '!spec/**'
   - app/**
   - views/**
   - vendor/bundle/**
   - .bundle/**
 
 functions:
-  WEB:
+  web:
     handler: rack_adapter.handler
     events:
       - http: ANY /
       - http: ANY {proxy+}
-    iamRoleStatements:
-    - Effect: Allow
-      Action:
-      - sns:Publish
-      Resource:
-      - "Fn::Join":
-        - ':'
-        - - "arn:aws:sns"
-          - Ref: AWS::Region
-          - Ref: AWS::AccountId
-          - "purge_start"
+    iam:
+      role:
+        statements:
+        - Effect: Allow
+          Action:
+          - sns:Publish
+          Resource:
+          - "Fn::Join":
+            - ':'
+            - - "arn:aws:sns"
+              - Ref: AWS::Region
+              - Ref: AWS::AccountId
+              - "purge_start"
 #  start_purge:
 #    handler: handler.start_purge
 #    events:
 #    - sns: purge_start
-#    iamRoleStatements:
-#    - Effect: Allow
-#      Action:
-#      - sns:Publish
-#      Resource:
-#      - "Fn::Join":
-#        - ':'
-#        - - "arn:aws:sns"
-#          - Ref: AWS::Region
-#          - Ref: AWS::AccountId
-#          - "purge_finish"
-#    - Effect: "Allow"
-#      Action:
-#      - "events:DeleteRule"
-#      - "events:RemoveTargets"
-#      - "events:PutRule"
-#      - "events:PutTargets"
-#      Resource:
-#      - "*"
-#    - Effect: Allow
-#      Action:
-#      - cloudwatch:PutMetricData
-#      Resource:
-#      - "*"
+#    iam:
+#      role:
+#        statements:
+#        - Effect: Allow
+#          Action:
+#          - sns:Publish
+#          Resource:
+#          - "Fn::Join":
+#            - ':'
+#            - - "arn:aws:sns"
+#              - Ref: AWS::Region
+#              - Ref: AWS::AccountId
+#              - "purge_finish"
+#        - Effect: "Allow"
+#          Action:
+#          - "events:DeleteRule"
+#          - "events:RemoveTargets"
+#          - "events:PutRule"
+#          - "events:PutTargets"
+#          Resource:
+#          - "*"
+#        - Effect: Allow
+#          Action:
+#          - cloudwatch:PutMetricData
+#          Resource:
+#          - "*"
 #  send_report:
 #    handler: handler.send_report
 #    events:

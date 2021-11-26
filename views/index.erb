@@ -1,0 +1,21 @@
+<html lang="en">
+
+<h1>Yo, it's Volgnie</h1>
+
+<% if session[:flash] && session[:flash][:error] %>
+  <div>
+    Error: <%= session[:flash][:error] %>
+    <% session[:flash][:error] = nil %>
+  </div>
+<% end %>
+
+<div>
+  <form action="/auth/twitter" method="post">
+    <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
+
+    <div>
+      <button type="submit">Sign in with Twitter</button>
+    </div>
+  </form>
+</div>
+</html>
