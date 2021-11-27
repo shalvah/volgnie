@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 require 'rest-client'
+require "oauth"
 require "oauth/request_proxy/rest_client_request"
 
 class TwitterApi
   DEFAULT_TIMEOUT = 20
-
   attr_accessor :access_token
   attr_accessor :access_token_secret
 
@@ -56,4 +56,15 @@ class TwitterApi
     query_params = {"user.fields" => "id,name,profile_image_url,protected,public_metrics,username"}
     request(:get, endpoint, query_params)
   end
+
+  def get_following(id)
+    endpoint = "/users/#{id}/following"
+    query_params = {max_results: 1000}
+    request(:get, endpoint, query_params)
+  end
 end
+
+Twitter = TwitterApi.new(
+  ENV.fetch('TWITTER_API_KEY'),
+  ENV.fetch('TWITTER_API_KEY_SECRET'),
+)

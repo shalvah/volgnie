@@ -55,46 +55,47 @@ get '/auth/twitter/callback' do
     Cache.set("user-#{auth_info[:uid]}", session[:user].to_json, ex: TWO_DAYS)
   end
   redirect '/purge/start'
-  end
+end
 
-  # User clicked "Cancel" on Twitter's Authorization page
-  get '/auth/failure' do
-    set_flash_error "Something went wrong. Please try logging in again."
-    redirect "/"
-  end
+# User clicked "Cancel" on Twitter's Authorization page
+get '/auth/failure' do
+  set_flash_error "Something went wrong. Please try logging in again."
+  redirect "/"
+end
 
-  get '/purge/start' do
-    redirect '/' if !current_user
-    erb :start
-  end
+get '/purge/start' do
+  redirect '/' if !current_user
+  erb :start
+end
 
-  post '/purge/start' do
-    redirect '/' if !current_user
+post '/purge/start' do
+  redirect '/' if !current_user
 
-    purge_config = {
-      report_email: params[:email],
-      level: 3
-    }
-    # todo don't let them fire this multiple times
-    Cache.set("purge-config-#{current_user["id"]}", purge_config.to_json, ex: TWO_DAYS)
+  purge_config = {
+    report_email: params[:email],
+    level: 3
+  }
+  # Don't let them fire purge multiple times
+  if Cache.set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: TWO_DAYS)
     Events.purge_start({
       id: current_user["id"],
       following_count: current_user["public_metrics"]["following_count"],
       followers_count: current_user["public_metrics"]["followers_count"],
       username: current_user["username"],
     }, purge_config)
-    erb :started
   end
+  erb :started
+end
 
-  # TODO
-  set :show_exceptions, false
+# TODO
+set :show_exceptions, false
 
-  error do
-    content_type :json
-    status 500
+error do
+  content_type :json
+  status 500
 
-    e = env['sinatra.error']
-    response = { error: e.message, trace: e.backtrace }
-    response.delete(:trace) if settings.production?
-    response.to_json
-  end
+  e = env['sinatra.error']
+  response = { error: e.message, trace: e.backtrace }
+  response.delete(:trace) if settings.production?
+  response.to_json
+end

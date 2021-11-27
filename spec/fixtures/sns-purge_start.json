@@ -1,0 +1,11 @@
+{
+  "Records": [
+    {
+      "Sns": {
+        "Timestamp": "2019-01-02T12:45:07.000Z",
+        "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
+        "Message": "{\"user\":{\"id\":\"876342319217332225\",\"following_count\":138,\"followers_count\":7354,\"username\":\"theshalvah\"},\"purge_config\":{\"report_email\":\"hello@example.test\",\"level\":3}}"
+      }
+    }
+  ]
+}
