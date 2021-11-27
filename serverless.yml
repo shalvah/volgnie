@@ -7,12 +7,8 @@ frameworkVersion: '^2.66'
 useDotenv: true
 
 plugins:
-- serverless-offline
-- serverless-rack
-
-custom:
-  rack:
-    bundlerBin: C:\\Ruby27-x64\\bin\\bundle.bat
+  - serverless-offline
+  - serverless-rack
 
 provider:
   name: aws
@@ -24,6 +20,19 @@ provider:
   region: us-east-1
   apiGateway:
     shouldStartNameWithService: false
+  iamRoleStatements:
+    - Effect: Allow
+      Action: [ "sns:Publish" ]
+      Resource:
+        - "Fn::Join":
+            - ':'
+            - [ "arn:aws:sns", { Ref: AWS::Region }, { Ref: AWS::AccountId }, "purge_start" ]
+        - "Fn::Join":
+            - ':'
+            - [ "arn:aws:sns", { Ref: AWS::Region }, { Ref: AWS::AccountId }, "purge_finish" ]
+    - Effect: Allow
+      Action: [ "cloudwatch:PutMetricData" ]
+      Resource: [ "*" ]
   environment:
     SESSION_SECRET: ${env:SESSION_SECRET}
     TWITTER_API_KEY: ${env:TWITTER_API_KEY}
@@ -31,83 +40,56 @@ provider:
     TWITTER_CALLBACK_URL: ${env:TWITTER_CALLBACK_URL}
     REDIS_HOSTNAME: ${env:REDIS_HOSTNAME}
     REDIS_PORT: ${env:REDIS_PORT}
+    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+    AWS_REGION: ${self:provider.region}
+    AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
     REDIS_PASSWORD: ${env:REDIS_PASSWORD}
-    REDIS_DB: ${env:REDIS_DB}
+    REDIS_DB: ${env:REDIS_DB, 0}
     BASE_URL: ${env:BASE_URL}
     HONEYBADGER_API_KEY: ${env:HONEYBADGER_API_KEY}
     APP_ENV: ${env:APP_ENV}
-    TOPIC_ARN:
-      "Fn::Join":
-      - ':'
-      - - "arn:aws:sns"
-        - Ref: AWS::AccountId
-        - Ref: AWS::Region
-        - "__topic__"
+
 
 package:
   patterns:
-  - '!docs/**'
-  - '!package.json'
-  - '!package-lock.json'
-  - '!node_modules'
-  - '!.env.*'
-  - '!spec/**'
-  - app/**
-  - views/**
-  - vendor/bundle/**
-  - .bundle/**
+    - '!docs/**'
+    - '!package.json'
+    - '!package-lock.json'
+    - '!node_modules'
+    - '!.env.*'
+    - '!spec/**'
+    - app/**
+    - rack_adapter.rb
+    - views/**
+    - vendor/bundle/**
+    - .bundle/**
+
 
 functions:
+
   web:
     handler: rack_adapter.handler
     events:
       - http: ANY /
       - http: ANY {proxy+}
-    iam:
-      role:
-        statements:
-        - Effect: Allow
-          Action:
-          - sns:Publish
-          Resource:
-          - "Fn::Join":
-            - ':'
-            - - "arn:aws:sns"
-              - Ref: AWS::Region
-              - Ref: AWS::AccountId
-              - "purge_start"
-#  start_purge:
-#    handler: handler.start_purge
-#    events:
-#    - sns: purge_start
-#    iam:
-#      role:
-#        statements:
-#        - Effect: Allow
-#          Action:
-#          - sns:Publish
-#          Resource:
-#          - "Fn::Join":
-#            - ':'
-#            - - "arn:aws:sns"
-#              - Ref: AWS::Region
-#              - Ref: AWS::AccountId
-#              - "purge_finish"
-#        - Effect: "Allow"
-#          Action:
-#          - "events:DeleteRule"
-#          - "events:RemoveTargets"
-#          - "events:PutRule"
-#          - "events:PutTargets"
-#          Resource:
-#          - "*"
-#        - Effect: Allow
-#          Action:
-#          - cloudwatch:PutMetricData
-#          Resource:
-#          - "*"
-#  send_report:
-#    handler: handler.send_report
-#    events:
-#    - sns: purge_finish
-#
+
+  start_purge:
+    handler: handler.start_purge
+    events:
+      - sns: purge_start
+
+  purge_batch:
+    handler: handler.purge_batch
+    events:
+      - sns: new_batch
+
+  finish_purge:
+    handler: handler.finish_purge
+    events:
+      - sns: purge_finish
+
+custom:
+  rack:
+    # Only needed if serverless-rack (via `npm run offline:build`) isn't finding your Bundler
+    bundlerBin: ${env:BUNDLER_BIN, "bundle"}

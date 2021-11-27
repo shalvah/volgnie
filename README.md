@@ -5,8 +5,7 @@
 2. Ruby 2.7 
 3. Redis. An easy way to run Redis locally (via Docker):
    ```bash
-    # on Windows
-    docker run --name redis -d -p 6379:6379 -v $env:DockerVolumes/redis/data:/data redis redis-server --appendonly yes
+    docker run --name redis --rm -p 6379:6379 redis
    ```
 
 ## Setup

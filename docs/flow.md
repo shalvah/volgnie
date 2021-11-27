@@ -9,11 +9,11 @@ This fires off an async event, `purge_start`, and immediately returns to another
 ### `purge_start`
 When the `purge_start` event is fired, it is picked up by the `start_purge` Lambda. This function:
 - fetches and stores the user's following
-- fetches the user's followers in chunks of 1000 (to a limit of 5k), and dispatches the `followers_batch`event for each chunk
+- fetches the user's followers in chunks of 1000 (to a limit of 5k), and dispatches the `new_batch`event for each chunk
 - records the total number of batches dispatched
 
-### `followers_batch`
-The `followers_batch` event is handled by the `purge_batch` Lambda. For each follower in the batch, it runs the needed checks:
+### `new_batch`
+The `new_batch` event is handled by the `purge_batch` Lambda. For each follower in the batch, it runs the needed checks:
 - checks if the user follows them (don't purge)
 - checks if the user has interacted with them in recent times (don't purge)
 
