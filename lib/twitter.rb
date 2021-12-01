@@ -37,12 +37,13 @@ class TwitterApi
     req
   end
 
-  def request(method, endpoint, params = {})
+  def raw_request(method, endpoint, params = {}, body: {})
     uri = @base_url + endpoint
     req = RestClient::Request.new(
       method: method,
       url: uri,
-      headers: {params: params},
+      headers: { params: params, content_type: :json },
+      body: body,
       timeout: 30
     )
     req = with_user_auth(req, uri)
@@ -51,16 +52,71 @@ class TwitterApi
     JSON.parse(response.body)
   end
 
+  def request(method, endpoint, params = {}, body: {}, options: {}, &block)
+    body = raw_request(method, endpoint, params, body: body)
+    data = body["data"]
+
+    if options[:all]
+      pagination_token = body["meta"]["next_token"]
+      while pagination_token
+        params["pagination_token"] = pagination_token
+        body = raw_request(method, endpoint, params, body: body)
+        data += body["data"]
+        pagination_token = body["meta"]["next_token"]
+      end
+      require 'ray'; ray data;
+      return data
+    end
+
+    if options[:chunked]
+      block.call(data, body["meta"])
+      pagination_token = body["meta"]["next_token"]
+      while pagination_token
+        params["pagination_token"] = pagination_token
+        body = raw_request(method, endpoint, params, body: body)
+        block.call(body["data"], body["meta"])
+        pagination_token = body["meta"]["next_token"]
+      end
+      return
+    end
+
+    data
+  end
+
   def get_user(id)
     endpoint = "/users/#{id}"
-    query_params = {"user.fields" => "id,name,profile_image_url,protected,public_metrics,username"}
+    query_params = { "user.fields" => "id,name,profile_image_url,protected,public_metrics,username" }
     request(:get, endpoint, query_params)
   end
 
-  def get_following(id)
+  def get_following(id, options = {}, &block)
     endpoint = "/users/#{id}/following"
-    query_params = {max_results: 1000}
-    request(:get, endpoint, query_params)
+    query_params = { max_results: 1000 }
+    request(:get, endpoint, query_params, options: options, &block)
+  end
+
+  def get_followers(id, options = {}, &block)
+    endpoint = "/users/#{id}/followers"
+    query_params = { max_results: 1000 }
+    request(:get, endpoint, query_params, options: options, &block)
+  end
+
+  def block_user(source_user_id, target_user_id)
+    endpoint = "/users/#{source_user_id}/blocking}"
+    request(:post, endpoint, body: {
+      target_user_id: target_user_id
+    })
+  end
+
+  def unblock_user(source_user_id, target_user_id)
+    endpoint = "/users/#{source_user_id}/blocking/#{target_user_id}"
+    request(:delete, endpoint)
+  end
+
+  def fetch_interactions(source_user, target_user)
+    endpoint = "/tweets/search/recent"
+    since = "2021-08-20"
+    query = "((from:#{source_user} to:#{target_user}) OR (from:#{target_user} to:#{source_user})) since:#{since}"
   end
 end
 

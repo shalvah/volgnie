@@ -5,12 +5,18 @@ require_relative '../lib/aws'
 class Events
   EVENT_HANDLERS = {
     "purge_start" => "start_purge",
+    "new_batch" => "purge_batch",
   }
 
   class << self
     def purge_start(user, purge_config)
       payload = { user: user, purge_config: purge_config }
       dispatch(payload, "purge_start")
+    end
+
+    def new_batch(followers, user, purge_config)
+      payload = { followers: followers, user: user, purge_config: purge_config }
+      dispatch(payload, "new_batch")
     end
 
     def dispatch(payload, topic)

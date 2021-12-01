@@ -49,7 +49,7 @@ get '/auth/twitter/callback' do
   #   "profile_image_url": "https://pbs.twimg.com/profile_images/1348334243898945536/1r1J6_vE_normal.jpg",
   #   "protected": false
   # }
-  session[:user] = Twitter.as_user(creds[:token], creds[:secret]).get_user(auth_info[:uid])["data"]
+  session[:user] = Twitter.as_user(creds[:token], creds[:secret]).get_user(auth_info[:uid])
   Cache.multi do
     Cache.set("keys-#{auth_info[:uid]}", creds.to_json, ex: TWO_DAYS)
     Cache.set("user-#{auth_info[:uid]}", session[:user].to_json, ex: TWO_DAYS)
