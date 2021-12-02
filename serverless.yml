@@ -18,8 +18,9 @@ provider:
   lambdaHashingVersion: 20201221
   timeout: 30
   region: us-east-1
-  apiGateway:
+  httpApi:
     shouldStartNameWithService: false
+    payload: '1.0'
   iamRoleStatements:
     - Effect: Allow
       Action: [ "sns:Publish" ]
@@ -44,7 +45,7 @@ provider:
     AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
     AWS_REGION: ${self:provider.region}
     AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
-    REDIS_PASSWORD: ${env:REDIS_PASSWORD}
+    REDIS_PASSWORD: ${env:REDIS_PASSWORD, ""}
     REDIS_DB: ${env:REDIS_DB, 0}
     BASE_URL: ${env:BASE_URL}
     HONEYBADGER_API_KEY: ${env:HONEYBADGER_API_KEY}
@@ -61,6 +62,7 @@ package:
     - '!spec/**'
     - app/**
     - rack_adapter.rb
+    - serverless_rack.rb
     - views/**
     - vendor/bundle/**
     - .bundle/**
@@ -70,9 +72,9 @@ functions:
 
   web:
     handler: rack_adapter.handler
+    timeout: 10
     events:
-      - http: ANY /
-      - http: ANY {proxy+}
+      - httpApi: '*'
 
   start_purge:
     handler: handler.start_purge
@@ -88,6 +90,15 @@ functions:
     handler: handler.finish_purge
     events:
       - sns: purge_finish
+
+  search:
+    handler: search_handler.searchTwitter
+    runtime: nodejs14.x
+    # Uses Puppeteer, so needs enough memory
+    memorySize: 1600
+    timeout: 30
+    environment:
+      CHROMIUM_EXECUTABLE: ${env:CHROMIUM_EXECUTABLE, ""}
 
 custom:
   rack:
