@@ -31,6 +31,7 @@ GEM
     ffi (1.15.4-x64-mingw32)
     hashdiff (1.0.1)
     hashie (5.0.0)
+    honeybadger (4.9.0)
     http-accept (1.7.0)
     http-cookie (1.0.4)
       domain_name (~> 0.5)
@@ -60,6 +61,7 @@ GEM
     rack (2.2.3)
     rack-protection (2.1.0)
       rack
+    rack-robustness (1.1.0)
     redis (4.5.1)
     rest-client (2.1.0-x64-mingw32)
       ffi (~> 1.9)
@@ -107,11 +109,13 @@ PLATFORMS
 DEPENDENCIES
   aws-sdk-sns (~> 1.48)
   base64
+  honeybadger (~> 4.9)
   json
   oauth (~> 0.5.8)
   omniauth (~> 2.0)
   omniauth-twitter (~> 1.4)
   rack-protection (~> 2.1)
+  rack-robustness (~> 1.1)
   redis (~> 4.5)
   rest-client (~> 2.1)
   rspec (~> 3.10)
@@ -119,4 +123,5 @@ DEPENDENCIES
   sinatra (~> 2.1)
   webmock (~> 3.14)
 
-
+BUNDLED WITH
+   2.2.15

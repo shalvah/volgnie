@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'sinatra'
+require 'honeybadger'
 require 'omniauth'
 require 'omniauth/strategies/twitter'
 require 'rack/protection'
@@ -10,9 +11,10 @@ require_relative '../lib/twitter'
 require_relative '../lib/cache'
 require_relative './events'
 
-set :sessions, expire_after: 2 * 24 * 60 * 60
+set :sessions, expire_after: TWO_DAYS
 set :session_secret, ENV.fetch('SESSION_SECRET')
 set :views, settings.root + '/../views'
+set :show_exceptions, :after_handler
 
 use Rack::Protection::AuthenticityToken
 OmniAuth.config.allowed_request_methods = [:post]
@@ -23,10 +25,13 @@ use OmniAuth::Builder do
   }
 end
 
-get '/' do
-  # puts request.env['serverless.event']
-  # puts request.env['serverless.context']
+before do
+  # This is needed because sls-rack sets rack.errors (the error logger) to stderr
+  # And sls-offline sends stderr to browser
+  env["rack.errors"] = $stdout if ENV["IS_OFFLINE"]
+end
 
+get '/' do
   erb :index
 end
 
@@ -87,15 +92,9 @@ post '/purge/start' do
   erb :started
 end
 
-# TODO
-set :show_exceptions, false
-
-error do
-  content_type :json
+error ZeroDivisionError do
   status 500
+  content_type :html
 
-  e = env['sinatra.error']
-  response = { error: e.message, trace: e.backtrace }
-  response.delete(:trace) if settings.production?
-  response.to_json
+  "Something went wrong, but we're looking into it! Please try again in a bit."
 end

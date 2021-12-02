@@ -1,5 +1,6 @@
 
 require 'bundler/setup'
+require 'honeybadger'
 require_relative './app/helpers'
 require_relative './app/events'
 require_relative './lib/cache'

@@ -21,7 +21,7 @@ class Events
 
     def dispatch(payload, topic)
       case ENV["APP_ENV"]
-      when "local", "test", "development"
+      when "development", "test"
         # On local, run the function directly
         event = fake_sns_event(payload).to_json.to_json # Yep
         command = "sls invoke local -f #{EVENT_HANDLERS[topic]} -d #{event}"

@@ -8,6 +8,7 @@ gem "rack-protection", "~> 2.1"
 gem "omniauth", "~> 2.0"
 gem "omniauth-twitter", "~> 1.4"
 gem "aws-sdk-sns", "~> 1.48"
+gem "honeybadger", "~> 4.9"
 
 gem "rest-client", "~> 2.1"
 gem "oauth", "~> 0.5.8"
