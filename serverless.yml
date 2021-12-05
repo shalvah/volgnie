@@ -18,6 +18,7 @@ provider:
   lambdaHashingVersion: 20201221
   timeout: 30
   region: us-east-1
+  versionFunctions: false
   httpApi:
     shouldStartNameWithService: false
     payload: '1.0'
@@ -33,6 +34,9 @@ provider:
             - [ "arn:aws:sns", { Ref: AWS::Region }, { Ref: AWS::AccountId }, "purge_finish" ]
     - Effect: Allow
       Action: [ "cloudwatch:PutMetricData" ]
+      Resource: [ "*" ]
+    - Effect: Allow
+      Action: [ "lambda:InvokeFunction" ]
       Resource: [ "*" ]
   environment:
     SESSION_SECRET: ${env:SESSION_SECRET}
@@ -78,20 +82,23 @@ functions:
 
   start_purge:
     handler: handler.start_purge
+    timeout: 120
     events:
       - sns: purge_start
 
   purge_batch:
     handler: handler.purge_batch
+    timeout: 120
     events:
       - sns: new_batch
 
   finish_purge:
     handler: handler.finish_purge
+    timeout: 20
     events:
       - sns: purge_finish
 
-  search:
+  search_twitter:
     handler: search_handler.searchTwitter
     runtime: nodejs14.x
     # Uses Puppeteer, so needs enough memory

@@ -20,3 +20,9 @@ To run the app locally:
 ```bash
 npm run offline
 ```
+
+To run tests:
+
+```bash
+bundle exec rspec
+```
