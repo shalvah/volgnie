@@ -10,25 +10,26 @@ require_relative './web_helpers'
 require_relative '../lib/twitter'
 require_relative '../lib/cache'
 require_relative './events'
+require_relative './config'
 
 set :sessions, expire_after: TWO_DAYS
 set :session_secret, ENV.fetch('SESSION_SECRET')
 set :views, settings.root + '/../views'
-set :show_exceptions, :after_handler
+set :show_exceptions, test? ? false : :after_handler
 
-use Rack::Protection::AuthenticityToken
+before do
+  # This is needed because sls-rack sets rack.errors (the error logger) to stderr
+  # And sls-offline sends stderr to browser
+  env["rack.errors"] = $stdout if ENV["IS_OFFLINE"]
+end
+
+use Rack::Protection::AuthenticityToken unless test?
 OmniAuth.config.allowed_request_methods = [:post]
 use OmniAuth::Builder do
   provider :twitter, ENV.fetch('TWITTER_API_KEY'), ENV.fetch('TWITTER_API_KEY_SECRET'), {
     use_authorize: true,
     callback_url: ENV.fetch('TWITTER_CALLBACK_URL'),
   }
-end
-
-before do
-  # This is needed because sls-rack sets rack.errors (the error logger) to stderr
-  # And sls-offline sends stderr to browser
-  env["rack.errors"] = $stdout if ENV["IS_OFFLINE"]
 end
 
 get '/' do
@@ -75,13 +76,15 @@ end
 
 post '/purge/start' do
   redirect '/' if !current_user
+  halt 400 if !params[:email]
 
   purge_config = {
     report_email: params[:email],
-    level: 3
+    level: 3,
+    __simulate: false, # todo
   }
   # Don't let them fire purge multiple times
-  if Cache.set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: TWO_DAYS)
+  if Cache.set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: Config::PurgeLockDuration)
     Events.purge_start({
       id: current_user["id"],
       following_count: current_user["public_metrics"]["following_count"],
@@ -89,10 +92,11 @@ post '/purge/start' do
       username: current_user["username"],
     }, purge_config)
   end
-  erb :started
+
+  erb :started, locals: {email: params[:email]}
 end
 
-error ZeroDivisionError do
+error do
   status 500
   content_type :html
 

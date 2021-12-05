@@ -16,6 +16,9 @@ GEM
       aws-partitions (~> 1, >= 1.525.0)
       aws-sigv4 (~> 1.1)
       jmespath (~> 1.0)
+    aws-sdk-lambda (1.76.0)
+      aws-sdk-core (~> 3, >= 3.122.0)
+      aws-sigv4 (~> 1.1)
     aws-sdk-sns (1.48.0)
       aws-sdk-core (~> 3, >= 3.122.0)
       aws-sigv4 (~> 1.1)
@@ -25,6 +28,7 @@ GEM
     concurrent-ruby (1.1.9)
     crack (0.4.5)
       rexml
+    date (3.0.0)
     diff-lcs (1.4.4)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
@@ -43,6 +47,8 @@ GEM
       mime-types-data (~> 3.2015)
     mime-types-data (3.2021.1115)
     minitest (5.14.4)
+    mock_redis (0.29.0)
+      ruby2_keywords
     mustermann (1.1.1)
       ruby2_keywords (~> 0.0.1)
     netrc (0.11.0)
@@ -61,7 +67,8 @@ GEM
     rack (2.2.3)
     rack-protection (2.1.0)
       rack
-    rack-robustness (1.1.0)
+    rack-test (1.1.0)
+      rack (>= 1.0, < 3)
     redis (4.5.1)
     rest-client (2.1.0-x64-mingw32)
       ffi (~> 1.9)
@@ -107,15 +114,18 @@ PLATFORMS
   x64-mingw32
 
 DEPENDENCIES
+  aws-sdk-lambda (~> 1.76)
   aws-sdk-sns (~> 1.48)
   base64
+  date
   honeybadger (~> 4.9)
   json
+  mock_redis (~> 0.29.0)
   oauth (~> 0.5.8)
   omniauth (~> 2.0)
   omniauth-twitter (~> 1.4)
   rack-protection (~> 2.1)
-  rack-robustness (~> 1.1)
+  rack-test (~> 1.1)
   redis (~> 4.5)
   rest-client (~> 2.1)
   rspec (~> 3.10)

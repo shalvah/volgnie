@@ -7,31 +7,32 @@ class Events
     "purge_start" => "start_purge",
     "new_batch" => "purge_batch",
   }
+  @@__dispatched = []
 
   class << self
     def purge_start(user, purge_config)
       payload = { user: user, purge_config: purge_config }
-      dispatch(payload, "purge_start")
+      dispatch("purge_start", payload)
     end
 
-    def new_batch(followers, user, purge_config)
-      payload = { followers: followers, user: user, purge_config: purge_config }
-      dispatch(payload, "new_batch")
+    def new_batch(followers, user, purge_config, batch_index)
+      payload = { followers: followers, user: user, purge_config: purge_config, batch_index: batch_index }
+      dispatch("new_batch", payload)
     end
 
-    def dispatch(payload, topic)
+    def dispatch(topic, payload)
       case ENV["APP_ENV"]
-      when "development", "test"
+      when "development"
         # On local, run the function directly
         event = fake_sns_event(payload).to_json.to_json # Yep
         command = "sls invoke local -f #{EVENT_HANDLERS[topic]} -d #{event}"
         # Note: for some reason, `sls invoke``deletes the rack_adapter handler,
         # so, after this, you'll have to recreate it with `npm run offline:build``
-        spawn(command, {[STDERR, STDOUT] => STDOUT})
+        spawn(command, { [STDERR, STDOUT] => STDOUT })
+      when "test"
+        @@__dispatched << { event: topic, payload: payload }
       else
-        client = Aws::SNS::Client.new(
-          region: region_name,
-        )
+        client = Aws::SNS::Client.new
         client.publish({
           message: payload.to_json,
           topic_arn: topic_arn(topic)
@@ -56,6 +57,14 @@ class Events
           }
         ]
       }
+    end
+
+    def __dispatched
+      @@__dispatched
+    end
+
+    def __clear_dispatched
+      @@__dispatched = []
     end
   end
 end
