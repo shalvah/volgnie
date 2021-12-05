@@ -8,6 +8,7 @@
     "serverless-rack": "^1.0.7"
   },
   "dependencies": {
+    "@honeybadger-io/js": "^3.2.7",
     "chrome-aws-lambda": "^10.1.0",
     "puppeteer-core": "^10.4.0"
   }

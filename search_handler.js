@@ -1,13 +1,16 @@
+const Honeybadger = require('@honeybadger-io/js');
+Honeybadger.configure({
+    apiKey: process.env.HONEYBADGER_API_KEY,
+});
 const puppeteer = require('puppeteer-core');
 const chromium = require('chrome-aws-lambda');
 
-exports.searchTwitter = async (event, context) => {
-    const payload = JSON.parse(event.body);
+exports.searchTwitter = Honeybadger.lambdaHandler(async (event, context) => {
+    // Support HTTP invocation or direct invocation
+    const payload = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
     const query = payload.query;
     if(!query) {
-        return {
-            error: "No search query"
-        };
+        throw new Error("No search query");
     }
 
     const browser = await puppeteer.launch({
@@ -17,10 +20,12 @@ exports.searchTwitter = async (event, context) => {
     await page.goto(`https://mobile.twitter.com/search/?q=${query}&f=live`);
 
     if (payload.checkExistenceOnly) {
-        const results = page.$$('article')
+        const results = await page.$$('article');
+        await page.waitForTimeout(1000); // todo maybe wait until element appears
+        const exists = results.length > 0;
         await browser.close();
         return {
-            exists: results.length > 0
+            exists
         };
     }
 
@@ -41,7 +46,7 @@ exports.searchTwitter = async (event, context) => {
     return {
         results: results
     };
-};
+});
 
 
 async function scrollToBottomOfResults(page){
