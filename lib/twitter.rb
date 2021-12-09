@@ -9,7 +9,7 @@ class TwitterApi
   attr_accessor :access_token
   attr_accessor :access_token_secret
 
-  def initialize(consumer_key, consumer_secret)
+  def initialize(consumer_key = nil, consumer_secret = nil)
     @consumer_key = consumer_key
     @consumer_secret = consumer_secret
 
@@ -64,18 +64,18 @@ class TwitterApi
         data += body["data"]
         pagination_token = body["meta"]["next_token"]
       end
-      require 'ray'; ray data;
-      return data
     end
 
     if options[:chunked]
-      block.call(data, body["meta"])
-      pagination_token = body["meta"]["next_token"]
-      while pagination_token
-        params["pagination_token"] = pagination_token
-        body = raw_request(method, endpoint, params, body: body)
-        block.call(body["data"], body["meta"])
+      catch(:stop_chunks) do
+        block.call(data, body["meta"])
         pagination_token = body["meta"]["next_token"]
+        while pagination_token
+          params["pagination_token"] = pagination_token
+          body = raw_request(method, endpoint, params, body: body)
+          block.call(body["data"], body["meta"])
+          pagination_token = body["meta"]["next_token"]
+        end
       end
       return
     end
@@ -101,22 +101,16 @@ class TwitterApi
     request(:get, endpoint, query_params, options: options, &block)
   end
 
-  def block_user(source_user_id, target_user_id)
-    endpoint = "/users/#{source_user_id}/blocking}"
+  def block(source_user_id, target_user_id)
+    endpoint = "/users/#{source_user_id}/blocking"
     request(:post, endpoint, body: {
       target_user_id: target_user_id
     })
   end
 
-  def unblock_user(source_user_id, target_user_id)
+  def unblock(source_user_id, target_user_id)
     endpoint = "/users/#{source_user_id}/blocking/#{target_user_id}"
     request(:delete, endpoint)
-  end
-
-  def fetch_interactions(source_user, target_user)
-    endpoint = "/tweets/search/recent"
-    since = "2021-08-20"
-    query = "((from:#{source_user} to:#{target_user}) OR (from:#{target_user} to:#{source_user})) since:#{since}"
   end
 end
 

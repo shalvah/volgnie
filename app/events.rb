@@ -5,7 +5,7 @@ require_relative '../lib/aws'
 class Events
   EVENT_HANDLERS = {
     "purge_start" => "start_purge",
-    "new_batch" => "purge_batch",
+    "fetched_followers" => "purge_batch",
   }
   @@__dispatched = []
 
@@ -15,9 +15,14 @@ class Events
       dispatch("purge_start", payload)
     end
 
-    def new_batch(followers, user, purge_config, batch_index)
-      payload = { followers: followers, user: user, purge_config: purge_config, batch_index: batch_index }
-      dispatch("new_batch", payload)
+    def fetched_followers(followers, user, purge_config)
+      payload = { followers: followers, user: user, purge_config: purge_config}
+      dispatch("fetched_followers", payload)
+    end
+
+    def purge_finish(user, purge_config)
+      payload = { user: user, purge_config: purge_config}
+      dispatch("purge_finish", payload)
     end
 
     def dispatch(topic, payload)
@@ -39,6 +44,7 @@ class Events
         })
       end
     end
+    private(:dispatch)
 
     def topic_arn(topic)
       ["arn:aws:sns", ENV.fetch("AWS_REGION"), ENV.fetch("AWS_ACCOUNT_ID"), topic].join(":")

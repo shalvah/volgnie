@@ -9,17 +9,16 @@ This fires off an async event, `purge_start`, and immediately returns to another
 ### `purge_start`
 When the `purge_start` event is fired, it is picked up by the `start_purge` Lambda. This function:
 - fetches and stores the user's following
-- fetches the user's followers in chunks of 1000 (to a limit of 5k), and dispatches the `new_batch`event for each chunk
-- records the total number of batches dispatched
+- fetches the user's followers (to a limit of 5k), and dispatches the `fetched_followers`event
 
-### `new_batch`
-The `new_batch` event is handled by the `purge_batch` Lambda. For each follower in the batch, it runs the needed checks:
+### `fetched_followers`
+The `fetched_followers` event is handled by the `purge_followers` Lambda. For each follower in the batch, it runs the needed checks:
 - checks if the user follows them (don't purge)
 - checks if the user has interacted with them in recent times (don't purge)
 
 If the user fails the criteria, they are purged (block/unblock) and recorded.
 
-When the batch is done, the handler increments the total number of batches processed. If this is the final batch (`batches_processed == batches_dispatched`), the handler fires the `purge_finish` event.
+When this is done, the handler fires the `purge_finish` event.
 
 ### `purge_finish`
 This event is handled by the `finish_purge` Lambda. It fetches the list of purged followers and:

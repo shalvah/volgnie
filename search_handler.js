@@ -5,7 +5,7 @@ Honeybadger.configure({
 const puppeteer = require('puppeteer-core');
 const chromium = require('chrome-aws-lambda');
 
-exports.searchTwitter = Honeybadger.lambdaHandler(async (event, context) => {
+exports.searchTwitter = async (event, context) => {
     // Support HTTP invocation or direct invocation
     const payload = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
     const query = payload.query;
@@ -18,10 +18,16 @@ exports.searchTwitter = Honeybadger.lambdaHandler(async (event, context) => {
     });
     const page = await browser.newPage();
     await page.goto(`https://mobile.twitter.com/search/?q=${query}&f=live`);
+    await page.waitForTimeout(1000); // todo maybe wait until element appears
 
     if (payload.checkExistenceOnly) {
+        if (payload.__screenshot) {
+            let filename = query.replace(/[: ]/g, "_")
+            await page.screenshot({
+                path: `${filename}.png`,
+            });
+        }
         const results = await page.$$('article');
-        await page.waitForTimeout(1000); // todo maybe wait until element appears
         const exists = results.length > 0;
         await browser.close();
         return {
@@ -46,7 +52,7 @@ exports.searchTwitter = Honeybadger.lambdaHandler(async (event, context) => {
     return {
         results: results
     };
-});
+};
 
 
 async function scrollToBottomOfResults(page){
