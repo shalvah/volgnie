@@ -80,7 +80,7 @@ post '/purge/start' do
 
   purge_config = {
     report_email: params[:email],
-    level: 3,
+    level: 2,
     __simulate: false, # todo
   }
   # Don't let them fire purge multiple times
