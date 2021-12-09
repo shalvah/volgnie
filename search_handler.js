@@ -13,7 +13,7 @@ exports.searchTwitter = async (event, context) => {
         throw new Error("No search query");
     }
 
-    const browser = await puppeteer.launch({
+    const browser = await chromium.puppeteer.launch({
         executablePath: process.env.CHROMIUM_EXECUTABLE || await chromium.executablePath,
     });
     const page = await browser.newPage();
