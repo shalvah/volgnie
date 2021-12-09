@@ -17,6 +17,7 @@ exports.searchTwitter = async (event, context) => {
         executablePath: process.env.CHROMIUM_EXECUTABLE || await chromium.executablePath,
     });
     const page = await browser.newPage();
+    await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36")
     await page.goto(`https://mobile.twitter.com/search/?q=${query}&f=live`);
     await page.waitForTimeout(1000); // todo maybe wait until element appears
 
