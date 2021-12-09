@@ -1,7 +1,9 @@
-module Purge
 
-  require 'date'
-  require_relative "../../lib/aws"
+require 'date'
+require_relative "./errors"
+require_relative "../../lib/aws"
+
+module Purge
 
   class RelationshipChecker
     def build(user)
@@ -23,7 +25,17 @@ module Purge
 
     def has_replied_to_follower(follower, days_ago = 30)
       since = (Date.today - days_ago).to_s
+      query = "from:#{@user["username"]} to:#{follower["username"]} since:#{since}"
+      query_tweets_exist?(query)
+    end
+
+    def has_replied_or_been_replied_to(follower, days_ago = 30)
+      since = (Date.today - days_ago).to_s
       query = "((from:#{@user["username"]} to:#{follower["username"]}) OR (from:#{follower["username"]} to:#{@user["username"]})) since:#{since}"
+      query_tweets_exist?(query)
+    end
+
+    def query_tweets_exist?(query)
       payload = {
         query: query,
         checkExistenceOnly: true
@@ -37,6 +49,7 @@ module Purge
       # Docs say it's a String, but it seems to be returning a StringIO
       result = JSON.parse(response.payload.is_a?(StringIO) ? response.payload.string : response.payload)
       if result["errorMessage"]
+        raise CouldntVerifyRelationship, "search Handler returned an error: #{result["ErrorMessage"]}"
         # Shouldn't notify twice?
         # Honeybadger.notify(result["errorMessage"], class_name: result["errorType"], backtrace: result["trace"])
       end
@@ -50,5 +63,4 @@ module Purge
       @following ||= JSON.parse(@cache.get("following-#{@user["id"]}"))
     end
   end
-
 end

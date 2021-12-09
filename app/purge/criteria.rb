@@ -1,8 +1,13 @@
 require_relative './relationship_checker'
+require_relative "./errors"
 
 module Purge
 
   class Criteria
+    MUTUAL = 4
+    MUST_HAVE_REPLIED_TO = 3
+    MUST_HAVE_INTERACTED = 2
+
     def self.build(user, purge_config)
       new(user, purge_config, RelationshipChecker.build(user))
     end
@@ -15,11 +20,11 @@ module Purge
 
     def passes(follower)
       case @config["level"]
-      when 4
+      when MUTUAL
         @rc.is_following(follower)
-      when 3
+      when MUST_HAVE_REPLIED_TO
         @rc.is_following(follower) || @rc.has_replied_to_follower(follower)
-      when 2
+      when MUST_HAVE_INTERACTED
         @rc.is_following(follower) || @rc.has_replied_or_been_replied_to(follower)
       end
     end

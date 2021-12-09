@@ -57,10 +57,9 @@ RSpec.describe "Purge::Purger" do
       purger = Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, time_limit_proc, simulating: true)
       purger.purge user[:followers]
     end.to raise_error do |error|
-      expect(error).to be_a(Purge::ErrorDuringPurge)
+      expect(error).to be_a(Purge::OutOfTime)
       expect(error.last_processed[:index]).to eq(2)
       expect(error.processing).to eq(payload["user"])
-      expect(error.cause).to be_a(Purge::OutOfTime)
     end
   end
 end

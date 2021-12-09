@@ -1,3 +1,6 @@
+
+require_relative "./errors"
+
 module Purge
 
   class Preparer

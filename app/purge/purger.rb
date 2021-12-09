@@ -1,3 +1,5 @@
+
+require_relative "./errors"
 require_relative './criteria'
 
 module Purge
@@ -28,7 +30,7 @@ module Purge
           last_processed = { id: purge_if_failing(follower), index: index }
         end
       rescue StandardError => e
-        wrapped = ErrorDuringPurge.new(e)
+        wrapped = e.is_a?(ErrorDuringPurge) ? e : ErrorDuringPurge.new(e)
         wrapped.last_processed = last_processed
         wrapped.processing = @user
         raise wrapped
@@ -52,13 +54,5 @@ module Purge
       raise OutOfTime, "Time left (#{left}) is less than minimum time (#{MINIMUM_PURGE_TIME_MS})" if left < MINIMUM_PURGE_TIME_MS
     end
 
-  end
-
-  class ErrorDuringPurge < StandardError
-    attr_accessor :last_processed
-    attr_accessor :processing
-  end
-
-  class OutOfTime < ErrorDuringPurge
   end
 end
