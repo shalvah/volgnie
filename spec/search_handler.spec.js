@@ -9,16 +9,25 @@ describe('search', function () {
     it('works', async function () {
         this.timeout(60000)
         let runs = process.env.CI ? 3 : 1;
-        while (runs--) {
-            let query = "from:jack to:Twitter"
+
+        for (let run = 1; run <= runs; run++) {
             let payload = {
-                query: query,
+                query: "from:jack to:Twitter",
                 checkExistenceOnly: true,
                 __screenshot: !process.env.CI // For debugging
             }
             let result = await searchTwitter({body: payload}, {});
             console.log(result);
-            assert.equal(result.exists, true, "Found no tweets when tweets exist");
+            assert.equal(result.exists, true, `Run ${run} of ${runs}: Found no tweets when tweets exist`);
+
+            payload = {
+                query: "from:Twitter to:jack",
+                checkExistenceOnly: true,
+                __screenshot: !process.env.CI // For debugging
+            }
+            result = await searchTwitter({body: payload}, {});
+            console.log(result);
+            assert.equal(result.exists, true, `Run ${run} of ${runs}: Found no tweets when tweets exist`);
 
             payload = {
                 query: "from:jack to:theshalvah",
@@ -27,7 +36,7 @@ describe('search', function () {
             }
             result = await searchTwitter({body: payload}, {});
             console.log(result);
-            assert.equal(result.exists, false, "Found tweets when NO tweets exist");
+            assert.equal(result.exists, false, `Run ${run} of ${runs}: Found tweets when NO tweets exist`);
 /*
             payload = {
                 query: "from:jack until:2006-03-22",

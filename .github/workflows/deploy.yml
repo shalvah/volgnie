@@ -1,11 +1,11 @@
 name: Deploy
 
-# on:
-#   workflow_run:
-#     workflows: ["Checks"]
-#     branches: [master]
-#     types:
-#       - completed
+on:
+  workflow_run:
+    workflows: ["Checks"]
+    branches: [master]
+    types:
+      - completed
 
 jobs:
   deploy-prod:
@@ -14,6 +14,6 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v2
-      - run: sls deploy
+      # - run: sls deploy
         # env:
         #   DEPLOY_URL: ${{ secrets.FORGE_DEPLOY_URL }}
