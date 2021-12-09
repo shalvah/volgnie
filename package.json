@@ -1,9 +1,12 @@
 {
   "scripts": {
     "offline:build": "sls rack install",
-    "offline": "serverless offline --noPrependStageInUrl --httpPort 9787"
+    "offline": "serverless offline --noPrependStageInUrl --httpPort 9787",
+    "test": "mocha spec/*.js"
   },
   "devDependencies": {
+    "dotenv": "^10.0.0",
+    "mocha": "^9.1.3",
     "serverless-offline": "^8.3.0",
     "serverless-rack": "^1.0.7"
   },

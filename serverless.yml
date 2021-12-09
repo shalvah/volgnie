@@ -86,11 +86,11 @@ functions:
     events:
       - sns: purge_start
 
-  purge_batch:
-    handler: handler.purge_batch
+  purge_followers:
+    handler: handler.purge_followers
     timeout: 120
     events:
-      - sns: new_batch
+      - sns: fetched_followers
 
   finish_purge:
     handler: handler.finish_purge

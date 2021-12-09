@@ -21,6 +21,9 @@ class Redis
   end
 end
 
+require "factory_bot"
+require "faker"
+
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true
@@ -36,6 +39,21 @@ RSpec.configure do |config|
     config.default_formatter = "doc"
   end
 
+  config.include FactoryBot::Syntax::Methods
+  config.before(:suite) do
+    FactoryBot.find_definitions
+  end
+
   config.disable_monkey_patching!
   config.order = :random
+end
+
+def fixture(path)
+  File.open(File.join("spec", "fixtures", "#{path.to_s}.json"))
+end
+
+def stringify_keys(hash)
+  hash.each_with_object({}) do |(k, v), obj|
+    obj[k.to_s] = v
+  end
 end

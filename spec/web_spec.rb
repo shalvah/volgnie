@@ -1,5 +1,4 @@
 require_relative '../app/web'
-require 'rspec'
 require 'rack/test'
 
 user = {
@@ -35,7 +34,7 @@ RSpec.describe "Web UI" do
       },
       purge_config: {
         report_email: email,
-        level: 3,
+        level: 2,
         __simulate: false,
       }
     }

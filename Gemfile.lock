@@ -32,6 +32,10 @@ GEM
     diff-lcs (1.4.4)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
+    factory_bot (6.2.0)
+      activesupport (>= 5.0.0)
+    faker (2.19.0)
+      i18n (>= 1.6, < 2)
     ffi (1.15.4-x64-mingw32)
     hashdiff (1.0.1)
     hashie (5.0.0)
@@ -118,6 +122,8 @@ DEPENDENCIES
   aws-sdk-sns (~> 1.48)
   base64
   date
+  factory_bot (~> 6.2)
+  faker (~> 2.19)
   honeybadger (~> 4.9)
   json
   mock_redis (~> 0.29.0)

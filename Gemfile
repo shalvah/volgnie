@@ -21,6 +21,8 @@ group :test do
   gem "webmock", "~> 3.14"
   gem "rack-test", "~> 1.1"
   gem "mock_redis", "~> 0.29.0"
+  gem "factory_bot", "~> 6.2"
+  gem "faker", "~> 2.19"
 end
 
 group :development do
