@@ -33,7 +33,7 @@ exports.searchTwitter = async (event, context) => {
         let results = await page.$$('article');
         if (results.length === 0) {
             // Try again to be sure. For some reason, it returns "No results" sometimes
-            await page.waitForTimeout(800);
+            await page.waitForTimeout(900);
             await page.goto(`https://mobile.twitter.com/search/?q=${query}&f=live`, {
                 waitUntil: 'networkidle2',
             });
@@ -43,7 +43,7 @@ exports.searchTwitter = async (event, context) => {
         if (payload.__screenshot) {
             let filename = query.replace(/[: ]/g, "_")
             await page.screenshot({
-                path: `${filename}.png`,
+                path: `_${filename}.png`,
             });
         }
 

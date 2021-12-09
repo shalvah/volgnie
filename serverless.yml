@@ -62,15 +62,15 @@ package:
     - '!package.json'
     - '!package-lock.json'
     - '!node_modules'
-    - '!.env.*'
+    - '!.env*'
     - '!spec/**'
+    - '!.github/**'
     - app/**
     - rack_adapter.rb
     - serverless_rack.rb
     - views/**
     - vendor/bundle/**
     - .bundle/**
-    - !.github/**
 
 
 functions:
