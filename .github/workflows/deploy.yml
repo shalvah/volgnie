@@ -16,4 +16,18 @@ jobs:
       - uses: actions/checkout@v2
       # - run: sls deploy
         # env:
-        #   DEPLOY_URL: ${{ secrets.FORGE_DEPLOY_URL }}
+        #   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        #   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        #   AWS_REGION: ${{ secrets.AWS_REGION }}
+        #   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+        #   TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+        #   TWITTER_API_KEY_SECRET: ${{ secrets.TWITTER_API_KEY_SECRET }}
+        #   TWITTER_CALLBACK_URL: ${{ secrets.TWITTER_CALLBACK_URL }}
+        #   REDIS_HOSTNAME: ${{ secrets.REDIS_HOSTNAME }}
+        #   REDIS_PORT: ${{ secrets.REDIS_PORT }}
+        #   REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+        #   REDIS_DB: ${{ secrets.REDIS_DB }}
+        #   HONEYBADGER_API_KEY: ${{ secrets.HONEYBADGER_API_KEY }}
+        #   SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+        #   APP_ENV: production
+        #   BASE_URL:

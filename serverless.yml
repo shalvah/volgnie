@@ -39,21 +39,21 @@ provider:
       Action: [ "lambda:InvokeFunction" ]
       Resource: [ "*" ]
   environment:
-    SESSION_SECRET: ${env:SESSION_SECRET}
+    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+    AWS_REGION: ${self:provider.region}
+    AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
     TWITTER_API_KEY: ${env:TWITTER_API_KEY}
     TWITTER_API_KEY_SECRET: ${env:TWITTER_API_KEY_SECRET}
     TWITTER_CALLBACK_URL: ${env:TWITTER_CALLBACK_URL}
     REDIS_HOSTNAME: ${env:REDIS_HOSTNAME}
     REDIS_PORT: ${env:REDIS_PORT}
-    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
-    AWS_REGION: ${self:provider.region}
-    AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
     REDIS_PASSWORD: ${env:REDIS_PASSWORD, ""}
     REDIS_DB: ${env:REDIS_DB, 0}
-    BASE_URL: ${env:BASE_URL}
     HONEYBADGER_API_KEY: ${env:HONEYBADGER_API_KEY}
+    SESSION_SECRET: ${env:SESSION_SECRET}
     APP_ENV: ${env:APP_ENV}
+    BASE_URL: ${env:BASE_URL}
 
 
 package:
