@@ -18,16 +18,16 @@ describe('search', function () {
             }
             let result = await searchTwitter({body: payload}, {});
             console.log(result);
-            assert.equal(result.exists, true);
+            assert.equal(result.exists, true, "Found no tweets when tweets exist");
 
             payload = {
                 query: "from:jack to:theshalvah",
                 checkExistenceOnly: true,
-                __screenshot: !process.env.CI // For debugging
+                __screenshot: !process.env.CI
             }
             result = await searchTwitter({body: payload}, {});
             console.log(result);
-            assert.equal(result.exists, false);
+            assert.equal(result.exists, false, "Found tweets when NO tweets exist");
 /*
             payload = {
                 query: "from:jack until:2006-03-22",
@@ -36,11 +36,10 @@ describe('search', function () {
             let {results} = await searchTwitter({body: payload}, {});
             console.log(results);
             assert.equal(results.length, 4);
-            // "just setting up my twttr" doesn't show up :(
-            assert.equal(results[0].text, "working on SMS in");
-            assert.equal(results[1].text, "lunch");
-            assert.equal(results[2].text, "waiting for dom to update more");
-            assert.equal(results[3].text, "inviting coworkers");*/
+            assert.equal(results[0].id, "62");
+            assert.equal(results[1].id, "51");
+            assert.equal(results[2].id, "35");
+            assert.equal(results[3].id, "29");*/
         }
     });
 });
