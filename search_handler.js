@@ -29,17 +29,24 @@ exports.searchTwitter = async (event, context) => {
         waitUntil: 'networkidle2',
     });
 
-    // Without this, we get "No results"
-    await page.waitForTimeout(4000);
-
     if (payload.checkExistenceOnly) {
+        let results = await page.$$('article');
+        if (results.length === 0) {
+            // Try again to be sure. For some reason, it returns "No results" sometimes
+            await page.waitForTimeout(800);
+            await page.goto(`https://mobile.twitter.com/search/?q=${query}&f=live`, {
+                waitUntil: 'networkidle2',
+            });
+            results = await page.$$('article');
+        }
+
         if (payload.__screenshot) {
             let filename = query.replace(/[: ]/g, "_")
             await page.screenshot({
                 path: `${filename}.png`,
             });
         }
-        const results = await page.$$('article');
+
         const exists = results.length > 0;
         await browser.close();
         return {
