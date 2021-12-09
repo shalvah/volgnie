@@ -11,6 +11,7 @@ require_relative '../lib/twitter'
 require_relative '../lib/cache'
 require_relative './events'
 require_relative './config'
+require_relative './purge//criteria'
 
 set :sessions, expire_after: TWO_DAYS
 set :session_secret, ENV.fetch('SESSION_SECRET')
@@ -76,13 +77,14 @@ end
 
 post '/purge/start' do
   redirect '/' if !current_user
-  halt 400 if !params[:email]
+  halt 400, "Missing parameters" if !params[:email] || !params[:level]
 
   purge_config = {
     report_email: params[:email],
-    level: 2,
-    __simulate: false, # todo
+    level: params[:level].to_i,
+    __simulate: params[:__simulate] == "on",
   }
+
   # Don't let them fire purge multiple times
   if Cache.set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: Config::PurgeLockDuration)
     Events.purge_start({

@@ -18,11 +18,42 @@ Ready to begin?
 <form action="/purge/start" method="post">
   <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
 
+  <br>
+  Choose a purge level:
+  <br>
+  <label>
+    Keep only those followers that I'm also following ("mutuals")
+    <input type="radio" name="level" value="<%= Purge::Criteria::MUTUAL %>" required>
+  </label>
+  <br>
+  <label>
+    Keep only those followers that I've replied to in the past 90 days
+    <input type="radio" name="level" value="<%= Purge::Criteria::MUST_HAVE_REPLIED_TO %>" required>
+  </label>
+  <br>
+    <label>
+      Keep only those followers that I've replied to or have replied to me in the past 90 days
+    <input type="radio" name="level" value="<%= Purge::Criteria::MUST_HAVE_INTERACTED %>" required>
+  </label>
+
+  <br>
+  <br>
+  After the purge is done, we'll send you a report of all the followers we removed.
   <label>
     Where should we send the report to?
     <input type="email" name="email" placeholder="your email address" required>
   </label>
 
+  <br>
+  <br>
+  <% if Config::Admins.include? current_user["username"] %>
+    <label>
+      Simulate?
+      <input type="checkbox" name="__simulate" checked>
+    </label>
+  <% end %>
+
+  <br>
   <div>
     <button type="submit">
       Purge my followers
