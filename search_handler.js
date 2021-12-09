@@ -9,17 +9,22 @@ exports.searchTwitter = async (event, context) => {
     // Support HTTP invocation or direct invocation
     const payload = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
     const query = payload.query;
-    if(!query) {
+    if (!query) {
         throw new Error("No search query");
     }
 
     const browser = await chromium.puppeteer.launch({
         executablePath: process.env.CHROMIUM_EXECUTABLE || await chromium.executablePath,
+        args: [
+            process.platform === "win32" ?
+                "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
+                : "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Fedora/20 () Chromium/91.0.65.110 Chrome/91.0.65.110.0 Safari/537.36"
+        ]
     });
     const page = await browser.newPage();
-    await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36")
-    await page.goto(`https://mobile.twitter.com/search/?q=${query}&f=live`);
-    await page.waitForTimeout(1000); // todo maybe wait until element appears
+    await page.goto(`https://mobile.twitter.com/search/?q=${query}&f=live`, {
+        waitUntil: 'networkidle0',
+    });
 
     if (payload.checkExistenceOnly) {
         if (payload.__screenshot) {
@@ -56,7 +61,7 @@ exports.searchTwitter = async (event, context) => {
 };
 
 
-async function scrollToBottomOfResults(page){
+async function scrollToBottomOfResults(page) {
     await page.evaluate(async () => {
         await new Promise((resolve, reject) => {
             let totalHeight = 0;
@@ -66,7 +71,7 @@ async function scrollToBottomOfResults(page){
                 window.scrollBy(0, distance);
                 totalHeight += distance;
 
-                if (totalHeight >= scrollHeight){
+                if (totalHeight >= scrollHeight) {
                     clearInterval(timer);
                     resolve();
                 }
