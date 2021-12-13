@@ -82,7 +82,7 @@ post '/purge/start' do
   purge_config = {
     report_email: params[:email],
     level: params[:level].to_i,
-    __simulate: params[:__simulate] == "on",
+    __simulate: Config::Admins.include?(current_user["username"]) ? params[:__simulate] == "on" : false,
   }
 
   # Don't let them fire purge multiple times

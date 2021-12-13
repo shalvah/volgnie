@@ -47,19 +47,19 @@ RSpec.describe "Web UI" do
     end
 
     it "fires purge_start event" do
-      post "/purge/start?email=#{email}"
+      post "/purge/start?email=#{email}&level=2"
       expect(Events.__dispatched).to match([expected_event])
     end
 
     it "will not fire purge_start event if already running" do
       Config::PurgeLockDuration = 1
 
-      post "/purge/start?email=#{email}"
+      post "/purge/start?email=#{email}&level=2"
       expect(Events.__dispatched).to match([expected_event])
-      post "/purge/start?email=#{email}"
+      post "/purge/start?email=#{email}&level=2"
       expect(Events.__dispatched).to match([expected_event])
       sleep 1
-      post "/purge/start?email=#{email}"
+      post "/purge/start?email=#{email}&level=2"
       expect(Events.__dispatched).to match([expected_event, expected_event])
     end
   end
