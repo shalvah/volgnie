@@ -39,10 +39,5 @@ def finish_purge(event:, context:)
   payload = get_sns_payload event
 
   cleaner = Purge::Cleaner.build(payload["user"], payload["purge_config"])
-  tasks = []
-  tasks << Thread.new { cleaner.report }
-  tasks << Thread.new { cleaner.record }
-  tasks.join
-
   cleaner.clean
 end

@@ -6,7 +6,7 @@ require_relative "../../lib/aws"
 module Purge
 
   class RelationshipChecker
-    def build(user)
+    def self.build(user)
       lambda_client = ENV["IS_OFFLINE"] ? Aws::Lambda::Client.new({
         endpoint: 'http://localhost:3002'
       }) : Aws::Lambda::Client.new
