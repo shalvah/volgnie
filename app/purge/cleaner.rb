@@ -32,25 +32,24 @@ module Purge
     end
 
     def record
-      return if ENV["CLOUDWATCH_METRICS"] === "off"
+      return if @purge_config["__simulate"] || (ENV["CLOUDWATCH_METRICS"] === "off")
 
       payload = {
         metric_data: [
           {
-            metric_name: "Purges",
-            dimensions: [
-              {
-                name: "PurgedFollowers",
-                value: @purged_followers.size
-              },
-              {
-                name: "AllFollowers",
-                value: @user["followers_count"]
-              },
-            ],
-            timestamp: Time.new,
+            metric_name: "PurgesCount",
             unit: 'Count',
             value: 1
+          },
+          {
+            metric_name: "PurgedFollowersCount",
+            unit: 'Count',
+            value: @purged_followers.size
+          },
+          {
+            metric_name: "TotalFollowersCount",
+            unit: 'Count',
+            value: @user["followers_count"]
           },
         ],
         namespace: 'Volgnie'

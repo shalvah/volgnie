@@ -36,6 +36,7 @@ GEM
     diff-lcs (1.4.4)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
+    dotenv (2.7.6)
     erb (2.2.3)
       cgi
     factory_bot (6.2.0)
@@ -139,6 +140,7 @@ DEPENDENCIES
   aws-sdk-sns (~> 1.48)
   base64
   date
+  dotenv (~> 2.7)
   erb
   factory_bot (~> 6.2)
   faker (~> 2.19)

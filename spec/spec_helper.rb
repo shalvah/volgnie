@@ -1,14 +1,5 @@
-ENV['APP_ENV'] = 'test'
-ENV['SESSION_SECRET'] = 'test'
-ENV['TWITTER_API_KEY'] = 'test'
-ENV['TWITTER_API_KEY_SECRET'] = 'test'
-ENV['TWITTER_CALLBACK_URL'] = 'http://localhost:9787/auth/twitter/callback'
-ENV['REDIS_HOSTNAME'] = 'localhost'
-ENV['REDIS_PORT'] = '6379'
-ENV['AWS_REGION'] = 'test'
-ENV['AWS_ACCESS_KEY_ID'] = 'test'
-ENV['AWS_SECRET_ACCESS_KEY'] = 'test'
-ENV["CLOUDWATCH_METRICS"] = "off"
+require 'dotenv'
+Dotenv.load(File.expand_path("../.env.test", __dir__))
 
 require 'honeybadger'
 Honeybadger.configure { |c| c.report_data = false }
@@ -34,7 +25,7 @@ RSpec.configure do |config|
     mocks.verify_partial_doubles = true
   end
 
-  config.filter_run focus: true
+  config.filter_run_when_matching :focus
   config.shared_context_metadata_behavior = :apply_to_host_groups
 
   if config.files_to_run.one?

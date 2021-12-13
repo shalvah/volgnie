@@ -25,6 +25,7 @@ group :test do
   gem "mock_redis", "~> 0.29.0"
   gem "factory_bot", "~> 6.2"
   gem "faker", "~> 2.19"
+  gem "dotenv", "~> 2.7"
 end
 
 group :development do
@@ -37,4 +38,3 @@ gem "base64"
 gem "date"
 gem "erb"
 gem "json"
-
