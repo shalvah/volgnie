@@ -38,7 +38,6 @@ RSpec.describe "Web UI" do
         __simulate: false,
       }
     }
-    expected_event = { event: "purge_start", payload: payload }
 
     before(:each) do
       env "rack.session", { user: user }
@@ -48,19 +47,29 @@ RSpec.describe "Web UI" do
 
     it "fires purge_start event" do
       post "/purge/start?email=#{email}&level=2"
-      expect(Events.__dispatched).to match([expected_event])
+      expect(Events.__dispatched).to match_array([expected_event(payload)])
     end
 
     it "will not fire purge_start event if already running" do
       Config::PurgeLockDuration = 1
 
       post "/purge/start?email=#{email}&level=2"
-      expect(Events.__dispatched).to match([expected_event])
+      expect(Events.__dispatched).to match_array([expected_event(payload)])
       post "/purge/start?email=#{email}&level=2"
-      expect(Events.__dispatched).to match([expected_event])
+      expect(Events.__dispatched).to match_array([expected_event(payload)])
       sleep 1
       post "/purge/start?email=#{email}&level=2"
-      expect(Events.__dispatched).to match([expected_event, expected_event])
+      expect(Events.__dispatched).to match_array([expected_event(payload), expected_event(payload)])
     end
   end
+end
+
+def expected_event(payload)
+    {
+      event: "purge_start",
+      payload: {
+        user: payload[:user],
+        purge_config: a_hash_including(payload[:purge_config])
+      }
+    }
 end

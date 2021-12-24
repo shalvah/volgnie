@@ -7,8 +7,8 @@ class Config
 
   class << self
     def mail
-      case ENV.fetch("APP_ENV")
-      when "development"
+      case ENV.fetch("MAIL_DRIVER")
+      when "mailtrap"
         delivery_method, settings = [:smtp,
           {
             address: ENV.fetch("MAILTRAP_HOST"),
@@ -19,7 +19,7 @@ class Config
         ]
       when "test"
         delivery_method, settings = [:test, {}]
-      when "production"
+      when "mailgun"
         delivery_method, settings = [:smtp, {}]
       end
 

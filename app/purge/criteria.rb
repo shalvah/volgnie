@@ -29,5 +29,12 @@ module Purge
       end
     end
 
+    def self.to_text(level)
+      {
+        MUST_HAVE_REPLIED_TO => "Keep only those followers that I've replied to in the past 90 days",
+        MUST_HAVE_INTERACTED => "Keep only those followers that I've replied to or have replied to me in the past 90 days",
+        MUTUAL => "Keep only those followers that I'm also following (\"mutuals\")",
+      }[level]
+    end
   end
 end

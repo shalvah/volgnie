@@ -82,6 +82,7 @@ post '/purge/start' do
   purge_config = {
     report_email: params[:email],
     level: params[:level].to_i,
+    trigger_time: Time.now.strftime("%B %-d, %Y at %H:%M:%S UTC%z"), # December 24, 2021 at 01:20:36 UTC+0100
     __simulate: Config::Admins.include?(current_user["username"]) ? params[:__simulate] == "on" : false,
   }
 

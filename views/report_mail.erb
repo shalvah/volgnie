@@ -1,2 +1,24 @@
+<body style="font-family: Verdana, Helvetica, Arial, sans-serif">
+<h2>Hi @<%= @locals[:user]["username"] %>, your Twitter purge is complete!</h2>
 
-Removed <%= @locals[:purged_followers].size %> followers out of <%= @locals[:user]["followers_count"] %>
+You triggered this purge at <%= @locals[:purge_trigger_time] %>, when you had
+<b><%= @locals[:user]["followers_count"] %></b> followers. You asked us to
+<i><%= Purge::Criteria::to_text(@locals[:level]) %></i>.
+
+<br>
+<br>
+
+<b><%= @locals[:purged_followers].size %></b> of your followers matched that criteria and were removed. You should now
+have <b><%= @locals[:user]["followers_count"] - @locals[:purged_followers].size %></b> followers.
+
+<br>
+<br>
+
+Here are the followers we removed:
+
+<ul>
+  <% @locals[:purged_followers].each do |follower| %>
+    <li><a href="http://twitter.com/<%= follower["username"] %>"><%= follower["username"] %></a></li>
+  <% end %>
+</ul>
+</body>

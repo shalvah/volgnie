@@ -22,17 +22,17 @@ Ready to begin?
   Choose a purge level:
   <br>
   <label>
-    Keep only those followers that I'm also following ("mutuals")
+    <%= Purge::Criteria::to_text(Purge::Criteria::MUTUAL) %>
     <input type="radio" name="level" value="<%= Purge::Criteria::MUTUAL %>" required>
   </label>
   <br>
   <label>
-    Keep only those followers that I've replied to in the past 90 days
+    <%= Purge::Criteria::to_text(Purge::Criteria::MUST_HAVE_REPLIED_TO) %>
     <input type="radio" name="level" value="<%= Purge::Criteria::MUST_HAVE_REPLIED_TO %>" required>
   </label>
   <br>
     <label>
-      Keep only those followers that I've replied to or have replied to me in the past 90 days
+      <%= Purge::Criteria::to_text(Purge::Criteria::MUST_HAVE_INTERACTED) %>
     <input type="radio" name="level" value="<%= Purge::Criteria::MUST_HAVE_INTERACTED %>" required>
   </label>
 
