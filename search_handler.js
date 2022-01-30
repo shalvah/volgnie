@@ -21,22 +21,20 @@ exports.searchTwitter = async (event, context) => {
                 "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
                 : "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Fedora/20 () Chromium/91.0.65.110 Chrome/91.0.65.110.0 Safari/537.36"
         ],
-        // On local, run headful; Twitter somehow detects headless and returns no results
-        headless: process.env.CHROMIUM_EXECUTABLE ? false : true
+        headless: true
     });
     const page = await browser.newPage();
-    await page.goto(`https://mobile.twitter.com/search/?q=${query}&f=live`, {
-        waitUntil: 'networkidle2',
-    });
+    await sleepFor(1100); // Avoid Twitter Search rate limits
+
+    const searchUrl = `https://mobile.twitter.com/search/?q=${query}&f=live`;
+    await page.goto(searchUrl, {waitUntil: 'networkidle2'});
 
     if (payload.checkExistenceOnly) {
         let results = await page.$$('article');
         if (results.length === 0) {
             // Try again to be sure. For some reason, it returns "No results" sometimes
             await page.waitForTimeout(900);
-            await page.goto(`https://mobile.twitter.com/search/?q=${query}&f=live`, {
-                waitUntil: 'networkidle2',
-            });
+            await page.goto(searchUrl, {waitUntil: 'networkidle2'});
             results = await page.$$('article');
         }
 
@@ -55,7 +53,7 @@ exports.searchTwitter = async (event, context) => {
     }
 
     // Currently, this scrolls to the bottom, but capture only some results
-    // Later: figure out how to capture all results
+    // todo: figure out how to capture all results
     await scrollToBottomOfResults(page);
     await page.screenshot({
         path: 'example.png',
@@ -91,4 +89,8 @@ async function scrollToBottomOfResults(page) {
             }, 400);
         });
     });
+}
+
+function sleepFor(ms) {
+    return new Promise(res => setTimeout(res, ms))
 }

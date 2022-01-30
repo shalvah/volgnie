@@ -20,7 +20,7 @@ provider:
   region: us-west-1
   versionFunctions: false
   httpApi:
-    shouldStartNameWithService: false
+    shouldStartNameWithService: true
     payload: '1.0'
   iamRoleStatements:
     - Effect: Allow

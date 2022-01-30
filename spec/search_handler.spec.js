@@ -18,7 +18,7 @@ describe('search', function () {
             }
             let result = await searchTwitter({body: payload}, {});
             console.log(result);
-            assert.equal(result.exists, true, `Run ${run} of ${runs}: Found no tweets when tweets exist`);
+            assert.equal(result.exists, true, `Run ${run} of ${runs}: Found no tweets for ${payload.query}`);
 
             payload = {
                 query: "from:Twitter to:jack",
@@ -27,7 +27,7 @@ describe('search', function () {
             }
             result = await searchTwitter({body: payload}, {});
             console.log(result);
-            assert.equal(result.exists, true, `Run ${run} of ${runs}: Found no tweets when tweets exist`);
+            assert.equal(result.exists, true, `Run ${run} of ${runs}: Found no tweets for ${payload.query}`);
 
             payload = {
                 query: "from:jack to:theshalvah",
