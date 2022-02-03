@@ -24,7 +24,7 @@ exports.searchTwitter = async (event, context) => {
         headless: true
     });
     const page = await browser.newPage();
-    await page.goto("https://google.com", {waitUntil: 'networkidle2'});
+    await page.goto("https://mobile.twitter.com", {waitUntil: 'networkidle2'});
     await sleepFor(2000); // Avoid Twitter Search rate limits
 
     const searchUrl = `https://mobile.twitter.com/search/?q=${query}&f=live`;
