@@ -13,7 +13,7 @@ exports.searchTwitter = async (event, context) => {
         throw new Error("No search query");
     }
 
-    console.log(await chromium.executablePath)
+    console.log(process.env.CHROMIUM_EXECUTABLE)
     const browser = await chromium.puppeteer.launch({
         executablePath: process.env.CHROMIUM_EXECUTABLE || await chromium.executablePath,
         args: [
@@ -22,7 +22,7 @@ exports.searchTwitter = async (event, context) => {
                 "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
                 : "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Fedora/20 () Chromium/91.0.65.110 Chrome/91.0.65.110.0 Safari/537.36"
         ],
-        headless: false
+        headless: true
     });
     const page = await browser.newPage();
     await page.goto("https://mobile.twitter.com", {waitUntil: 'networkidle2'});
@@ -30,13 +30,15 @@ exports.searchTwitter = async (event, context) => {
 
     const searchUrl = `https://mobile.twitter.com/search/?q=${query}&f=live`;
     await page.goto(searchUrl, {waitUntil: 'networkidle2'});
+    await page.waitForTimeout(500);
 
     if (payload.checkExistenceOnly) {
         let results = await page.$$('article');
         if (results.length === 0) {
             // Try again to be sure. For some reason, it returns "No results" sometimes
-            await page.waitForTimeout(900);
             await page.goto(searchUrl, {waitUntil: 'networkidle2'});
+            console.log("second try");
+            await page.waitForTimeout(500);
             results = await page.$$('article');
         }
 
