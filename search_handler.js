@@ -17,14 +17,15 @@ exports.searchTwitter = async (event, context) => {
         executablePath: process.env.CHROMIUM_EXECUTABLE || await chromium.executablePath,
         args: [
             // See https://filipvitas.medium.com/how-to-set-user-agent-header-with-puppeteer-js-and-not-fail-28c7a02165da
-            process.platform === "win32" ?
-                "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
-                : "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Fedora/20 () Chromium/91.0.65.110 Chrome/91.0.65.110.0 Safari/537.36"
+            process.platform === "win32"
+                ? "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
+                : "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chrome/96.0.4664.93 Safari/537.36"
         ],
         headless: true
     });
     const page = await browser.newPage();
-    await sleepFor(20000); // Avoid Twitter Search rate limits
+    console.log(await browser.userAgent())
+    await sleepFor(2000); // Avoid Twitter Search rate limits
     await page.goto("https://mobile.twitter.com", {waitUntil: 'networkidle2'});
     await page.waitForTimeout(500);
 
