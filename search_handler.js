@@ -13,7 +13,6 @@ exports.searchTwitter = async (event, context) => {
         throw new Error("No search query");
     }
 
-    console.log(process.env.CHROMIUM_EXECUTABLE)
     const browser = await chromium.puppeteer.launch({
         executablePath: process.env.CHROMIUM_EXECUTABLE || await chromium.executablePath,
         args: [
@@ -26,7 +25,7 @@ exports.searchTwitter = async (event, context) => {
     });
     const page = await browser.newPage();
     await page.goto("https://mobile.twitter.com", {waitUntil: 'networkidle2'});
-    await sleepFor(2000); // Avoid Twitter Search rate limits
+    await sleepFor(20000); // Avoid Twitter Search rate limits
 
     const searchUrl = `https://mobile.twitter.com/search/?q=${query}&f=live`;
     await page.goto(searchUrl, {waitUntil: 'networkidle2'});

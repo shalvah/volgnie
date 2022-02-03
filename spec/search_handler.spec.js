@@ -7,7 +7,7 @@ require('@honeybadger-io/js').configure({
 
 describe('search', function () {
     it('works', async function () {
-        this.timeout(140000)
+        this.timeout(600000)
         let runs = process.env.CI ? 3 : 1;
 
         for (let run = 1; run <= runs; run++) {
