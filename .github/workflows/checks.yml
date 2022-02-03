@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: 16.5.0
       - run: npm ci --production=false
-      - run: npm i puppeteer
+      - run: npm i puppeteer@13.1.3
       - name: Tests
         run: npm test
 
