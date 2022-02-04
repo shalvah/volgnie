@@ -24,25 +24,19 @@ exports.searchTwitter = async (event, context) => {
     });
     const page = await browser.newPage();
     page.on('console', (msg) => console.log('PAGE LOG:', msg.text()));
-    await page.goto("https://mobile.twitter.com/explore", {waitUntil: 'networkidle2'});
-    await sleepFor(3000); // Avoid Twitter Search rate limits
-
-    const searchUrl = `https://mobile.twitter.com/search/?q=${query}&f=live`;
-    await page.type("input", query);
-    await page.keyboard.press('Enter');
-    await page.waitForTimeout(1000);
+    await searchTwitterWebsite(page, query);
 
     if (payload.checkExistenceOnly) {
-        let results = await page.$$('article');
-        if (results.length === 0) {
+        let results = await page.$('article');
+        if (!results) {
+            console.log("Second try");
             // Try again to be sure. For some reason, it returns "No results" sometimes
-            await page.goto(searchUrl, {waitUntil: 'networkidle2'});
-            await page.waitForTimeout(500);
+            await searchTwitterWebsite(page, query);
             results = await page.$$('article');
         }
 
         if (payload.__screenshot) {
-            let filename = query.replace(/[: ]/g, "_")
+            let filename = query.replace(/[: ]/g, "_");
             await page.screenshot({
                 path: `_${filename}.png`,
             });
@@ -57,23 +51,35 @@ exports.searchTwitter = async (event, context) => {
 
     // Currently, this scrolls to the bottom, but capture only some results
     // todo: figure out how to capture all results
+    // idea: scroll, while capturing
     await scrollToBottomOfResults(page);
     await page.screenshot({
         path: 'example.png',
         captureBeyondViewport: true,
         fullPage: true
     });
-    const results = await page.$$('article a time');
-    // const tweetLinks = results.map(timeElement => {
-    //     timeElement.
-    // });
+    const tweetLinks = await page.$$eval('article a time', timeElements => {
+        return timeElements.map(t => {
+            return t.parentElement.getAttribute("href");
+        });
+    });
     await browser.close();
 
     return {
-        results: results
+        results: tweetLinks
     };
 };
 
+async function searchTwitterWebsite(page, query) {
+    await page.goto("https://mobile.twitter.com/explore", {waitUntil: 'networkidle2'});
+    await page.waitForTimeout(3000);
+    await page.type("input[type=text][aria-label=\"Search query\"]", query);
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(1000);
+    const tabs = await page.$$("a[role=tab]");
+    await tabs[1].click(); // "Latest" tab
+    await page.waitForTimeout(1000);
+}
 
 async function scrollToBottomOfResults(page) {
     await page.evaluate(async () => {
@@ -92,8 +98,4 @@ async function scrollToBottomOfResults(page) {
             }, 400);
         });
     });
-}
-
-function sleepFor(ms) {
-    return new Promise(res => setTimeout(res, ms))
 }

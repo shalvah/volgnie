@@ -6,7 +6,7 @@ require('@honeybadger-io/js').configure({
 });
 
 describe('search', function () {
-    it('works', async function () {
+    it('works to check existence', async function () {
         this.timeout(600000)
         let runs = process.env.CI ? 3 : 1;
 
@@ -37,18 +37,33 @@ describe('search', function () {
             result = await searchTwitter({body: payload}, {});
             console.log(result);
             assert.equal(result.exists, false, `Run ${run} of ${runs}: Found tweets when NO tweets exist`);
-/*
-            payload = {
+        }
+    });
+
+    it('works to fetch tweets', async function () {
+        this.timeout(600000)
+        let runs = process.env.CI ? 2 : 1;
+
+        for (let run = 1; run <= runs; run++) {
+            let payload = {
                 query: "from:jack until:2006-03-22",
                 __screenshot: !process.env.CI // For debugging
             }
             let {results} = await searchTwitter({body: payload}, {});
             console.log(results);
             assert.equal(results.length, 4);
-            assert.equal(results[0].id, "62");
-            assert.equal(results[1].id, "51");
-            assert.equal(results[2].id, "35");
-            assert.equal(results[3].id, "29");*/
+            assert.equal(results[0], "/jack/status/62");
+            assert.equal(results[1], "/jack/status/51");
+            assert.equal(results[2], "/jack/status/35");
+            assert.equal(results[3], "/jack/status/29");
+
+            // todo
+            payload = {
+                query: "from:Twitter until:2008-03-22",
+                __screenshot: !process.env.CI // For debugging
+            }
+            results = await searchTwitter({body: payload}, {}).results;
+            console.log(results);
         }
     });
 });
