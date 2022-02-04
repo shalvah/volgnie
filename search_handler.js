@@ -32,7 +32,7 @@ exports.searchTwitter = async (event, context) => {
             console.log("Second try");
             // Try again to be sure. For some reason, it returns "No results" sometimes
             await searchTwitterWebsite(page, query);
-            results = await page.$$('article');
+            results = await page.$('article');
         }
 
         if (payload.__screenshot) {
@@ -42,7 +42,7 @@ exports.searchTwitter = async (event, context) => {
             });
         }
 
-        const exists = results.length > 0;
+        const exists = !!results;
         await browser.close();
         return {
             exists
@@ -53,11 +53,14 @@ exports.searchTwitter = async (event, context) => {
     // todo: figure out how to capture all results
     // idea: scroll, while capturing
     await scrollToBottomOfResults(page);
-    await page.screenshot({
-        path: 'example.png',
-        captureBeyondViewport: true,
-        fullPage: true
-    });
+    if (payload.__screenshot) {
+        let filename = query.replace(/[: ]/g, "_");
+        await page.screenshot({
+            path: `_${filename}.png`,
+            captureBeyondViewport: true,
+            fullPage: true
+        });
+    }
     const tweetLinks = await page.$$eval('article a time', timeElements => {
         return timeElements.map(t => {
             return t.parentElement.getAttribute("href");
