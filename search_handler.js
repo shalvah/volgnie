@@ -2,7 +2,6 @@ const Honeybadger = require('@honeybadger-io/js');
 Honeybadger.configure({
     apiKey: process.env.HONEYBADGER_API_KEY,
 });
-const puppeteer = require('puppeteer-core');
 const chromium = require('chrome-aws-lambda');
 
 exports.searchTwitter = async (event, context) => {
@@ -13,6 +12,7 @@ exports.searchTwitter = async (event, context) => {
         throw new Error("No search query");
     }
 
+    process.env.AWS_LAMBDA_FUNCTION_NAME = "thng"
     const browser = await chromium.puppeteer.launch({
         executablePath: process.env.CHROMIUM_EXECUTABLE || await chromium.executablePath,
         args: [
