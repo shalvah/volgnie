@@ -21,13 +21,13 @@ exports.searchTwitter = async (event, context) => {
                 ? "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
                 : "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/92.0.4512.0 Safari/537.36"
         ],
+        slowMo: 200,
         headless: true
     });
     const page = await browser.newPage();
     page.on('console', (msg) => console.log('PAGE LOG:', msg.text()));
-    await sleepFor(5000); // Avoid Twitter Search rate limits
-    await page.goto("https://mobile.twitter.com", {waitUntil: 'networkidle2'});
-    await page.waitForTimeout(500);
+    await page.goto("https://mobile.twitter.com/explore", {waitUntil: 'networkidle2'});
+    await sleepFor(10000); // Avoid Twitter Search rate limits
 
     const searchUrl = `https://mobile.twitter.com/search/?q=${query}&f=live`;
     await page.goto(searchUrl, {waitUntil: 'networkidle2'});
@@ -37,8 +37,9 @@ exports.searchTwitter = async (event, context) => {
         let results = await page.$$('article');
         if (results.length === 0) {
             // Try again to be sure. For some reason, it returns "No results" sometimes
-            await page.goto(searchUrl, {waitUntil: 'networkidle2'});
             console.log("second try");
+            await page.waitForTimeout(500);
+            await page.goto(searchUrl, {waitUntil: 'networkidle2'});
             await page.waitForTimeout(500);
             results = await page.$$('article');
         }
