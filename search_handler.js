@@ -12,7 +12,6 @@ exports.searchTwitter = async (event, context) => {
         throw new Error("No search query");
     }
 
-    process.env.AWS_LAMBDA_FUNCTION_NAME = "thng"
     const browser = await chromium.puppeteer.launch({
         executablePath: process.env.CHROMIUM_EXECUTABLE || await chromium.executablePath,
         args: [
@@ -27,18 +26,17 @@ exports.searchTwitter = async (event, context) => {
     const page = await browser.newPage();
     page.on('console', (msg) => console.log('PAGE LOG:', msg.text()));
     await page.goto("https://mobile.twitter.com/explore", {waitUntil: 'networkidle2'});
-    await sleepFor(10000); // Avoid Twitter Search rate limits
+    await sleepFor(5000); // Avoid Twitter Search rate limits
 
     const searchUrl = `https://mobile.twitter.com/search/?q=${query}&f=live`;
-    await page.goto(searchUrl, {waitUntil: 'networkidle2'});
-    await page.waitForTimeout(500);
+    await page.type("input", query);
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(1000);
 
     if (payload.checkExistenceOnly) {
         let results = await page.$$('article');
         if (results.length === 0) {
             // Try again to be sure. For some reason, it returns "No results" sometimes
-            console.log("second try");
-            await page.waitForTimeout(500);
             await page.goto(searchUrl, {waitUntil: 'networkidle2'});
             await page.waitForTimeout(500);
             results = await page.$$('article');
