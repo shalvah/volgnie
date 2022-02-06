@@ -3,6 +3,8 @@ require 'aws-sdk-cloudwatch'
 
 module Purge
 
+  # Cleans up after a purge
+  # Sends an email report to the user, and records CloudWatch metrics
   class Cleaner
     def self.build(user, purge_config)
       cloudwatch_client = Aws::CloudWatch::Client.new

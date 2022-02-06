@@ -39,7 +39,7 @@ RSpec.describe "Purge::Purger" do
   end
 
   it "runs purge as expected" do
-    time_limit_proc = Proc.new { Float::INFINITY }
+    time_limit_proc = proc { Float::INFINITY }
 
     purger = Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, time_limit_proc, simulating: true)
     purger.purge user[:followers]
@@ -59,7 +59,7 @@ RSpec.describe "Purge::Purger" do
     end.to raise_error do |error|
       expect(error).to be_a(Purge::OutOfTime)
       expect(error.last_processed[:index]).to eq(2)
-      expect(error.processing).to eq(payload["user"])
+      expect(error.processing_for).to eq(payload["user"])
     end
   end
 end

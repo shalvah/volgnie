@@ -2,7 +2,7 @@ module Purge
 
   class ErrorDuringPurge < StandardError
     attr_accessor :last_processed
-    attr_accessor :processing
+    attr_accessor :processing_for
   end
 
   class OutOfTime < ErrorDuringPurge

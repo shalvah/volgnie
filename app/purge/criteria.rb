@@ -19,21 +19,22 @@ module Purge
     end
 
     def passes(follower)
+      this_user = @rc
       case @config["level"]
       when MUTUAL
-        @rc.is_following(follower)
+        this_user.is_following(follower)
       when MUST_HAVE_REPLIED_TO
-        @rc.is_following(follower) || @rc.has_replied_to_follower(follower)
+        this_user.is_following(follower) || this_user.has_replied_to_follower(follower)
       when MUST_HAVE_INTERACTED
-        @rc.is_following(follower) || @rc.has_replied_or_been_replied_to(follower)
+        this_user.is_following(follower) || this_user.has_replied_or_been_replied_to(follower)
       end
     end
 
     def self.to_text(level)
       {
-        MUST_HAVE_REPLIED_TO => "Keep only those followers that I've replied to in the past 90 days",
-        MUST_HAVE_INTERACTED => "Keep only those followers that I've replied to or have replied to me in the past 90 days",
-        MUTUAL => "Keep only those followers that I'm also following (\"mutuals\")",
+        MUST_HAVE_REPLIED_TO => "Keep followers that I've replied to in the past 90 days",
+        MUST_HAVE_INTERACTED => "Keep followers that I've replied to or have replied to me in the past 90 days",
+        MUTUAL => "Keep followers that I'm also following (\"mutuals\")",
       }[level]
     end
   end

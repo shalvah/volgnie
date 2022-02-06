@@ -13,26 +13,29 @@ module Purge
       new(user, Cache, lambda_client)
     end
 
-    def initialize(user, cache, lambda_client)
+    def initialize(user, cache, lambda_client, days_ago = 90)
       @user = user
       @cache = cache
       @lambda_client = lambda_client
+      @days_ago = days_ago
     end
 
     def is_following(follower)
       following.include? { |f| f["id"] === follower["id"] }
     end
 
-    def has_replied_to_follower(follower, days_ago = 30)
-      since = (Date.today - days_ago).to_s
-      query = "from:#{@user["username"]} to:#{follower["username"]} since:#{since}"
+    def has_replied_to_follower(follower)
+      query = "from:#{@user["username"]} to:#{follower["username"]} since:#{since_date}"
       query_tweets_exist?(query)
     end
 
-    def has_replied_or_been_replied_to(follower, days_ago = 30)
-      since = (Date.today - days_ago).to_s
-      query = "((from:#{@user["username"]} to:#{follower["username"]}) OR (from:#{follower["username"]} to:#{@user["username"]})) since:#{since}"
+    def has_replied_or_been_replied_to(follower)
+      query = "((from:#{@user["username"]} to:#{follower["username"]}) OR (from:#{follower["username"]} to:#{@user["username"]})) since:#{since_date}"
       query_tweets_exist?(query)
+    end
+
+    def since_date
+      (Date.today - @days_ago).to_s
     end
 
     def query_tweets_exist?(query)

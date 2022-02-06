@@ -1,6 +1,6 @@
 
 require_relative "./errors"
-require_relative './criteria'
+require_relative "./criteria"
 
 module Purge
 
@@ -32,7 +32,7 @@ module Purge
       rescue StandardError => e
         wrapped = e.is_a?(ErrorDuringPurge) ? e : ErrorDuringPurge.new(e)
         wrapped.last_processed = last_processed
-        wrapped.processing = @user
+        wrapped.processing_for = @user
         raise wrapped
       end
     end
@@ -41,7 +41,7 @@ module Purge
       return follower["id"] if @criteria.passes(follower)
 
       unless @simulating
-        @t.block(@user, follower) # Intentionally blocking calls to prolong rate limits
+        @t.block(@user, follower) # Intentionally synchronous calls to prolong rate limits
         @t.unblock(@user, follower)
       end
       @cache.rpush("purged-followers-#{@user["id"]}", follower.to_json)
@@ -50,8 +50,8 @@ module Purge
     end
 
     def break_if_out_of_time
-      left = @time_limit_proc.call
-      raise OutOfTime, "Time left (#{left}) is less than minimum time (#{MINIMUM_PURGE_TIME_MS})" if left < MINIMUM_PURGE_TIME_MS
+      time_left = @time_limit_proc.call
+      raise OutOfTime, "Time left (#{time_left}) is less than minimum time (#{MINIMUM_PURGE_TIME_MS})" if time_left < MINIMUM_PURGE_TIME_MS
     end
 
   end
