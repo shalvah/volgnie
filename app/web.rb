@@ -83,11 +83,11 @@ post '/purge/start' do
     report_email: params[:email],
     level: params[:level].to_i,
     trigger_time: Time.now.strftime("%B %-d, %Y at %H:%M:%S UTC%z"), # December 24, 2021 at 01:20:36 UTC+0100
-    __simulate: Config::Admins.include?(current_user["username"]) ? params[:__simulate] == "on" : false,
+    __simulate: AppConfig[:admins].include?(current_user["username"]) ? params[:__simulate] == "on" : false,
   }
 
   # Don't let them fire purge multiple times
-  if Cache.set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: Config::PurgeLockDuration)
+  if Cache.set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: AppConfig[:purge_lock_duration])
     Events.purge_start({
       id: current_user["id"],
       following_count: current_user["public_metrics"]["following_count"],

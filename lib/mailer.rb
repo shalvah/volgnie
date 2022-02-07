@@ -3,7 +3,7 @@ require 'mail'
 
 class Mailer
   def initialize(to_address, subject)
-    @from = Config::mail[:from]
+    @from = AppConfig[:mail][:from]
     @to = to_address
     @subject = subject
   end
@@ -23,7 +23,7 @@ class Mailer
       m.body ERB.new(load_template).result(binding)
     end
 
-    mail.delivery_method(Config::mail[:delivery_method], **Config::mail[:settings])
+    mail.delivery_method(AppConfig[:mail][:delivery_method], **AppConfig[:mail][:settings])
     mail.deliver
 
     if mail.bounced? || mail.action == "failed"

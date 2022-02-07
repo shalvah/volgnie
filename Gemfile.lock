@@ -160,5 +160,4 @@ DEPENDENCIES
   sinatra (~> 2.1)
   webmock (~> 3.14)
 
-BUNDLED WITH
-   2.2.15
+

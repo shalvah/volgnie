@@ -1,4 +1,5 @@
 require 'redis'
+require_relative '../app/helpers'
 
 redis_options = {
   host: ENV.fetch('REDIS_HOSTNAME'),

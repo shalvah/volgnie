@@ -27,7 +27,7 @@ module Purge
     end
 
     def report
-      subject = @purge_config["__simulate"] ? "[SIMULATED] Twitter Purge Complete!" : "Twitter Purge Complete!"
+      subject = @purge_config["__simulate"] ? "[SIMULATED] Twitter Purge Complete" : "Twitter Purge Complete"
       Mailer.new(@purge_config["report_email"], subject)
         .view(@purged_followers.empty? ? :report_empty_mail : :report_mail, {
           purged_followers: @purged_followers,

@@ -29,6 +29,8 @@ group :test do
 end
 
 group :development do
+  # For debugging
+  # Usage: require 'ray'; ray(thing)
   gem "ruby-ray"
 end
 

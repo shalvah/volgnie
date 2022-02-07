@@ -1,33 +1,51 @@
-class Config
-  PurgeLockDuration = 2 * 24 * 60 * 60
+class AppConfig
+  MailDrivers = {
+    "mailtrap" => lambda { {
+      delivery_method: :smtp,
+      settings: {
+        address: ENV.fetch("MAILTRAP_HOST"),
+        port: ENV.fetch("MAILTRAP_PORT").to_i,
+        user_name: ENV.fetch("MAILTRAP_USERNAME"),
+        password: ENV.fetch("MAILTRAP_PASSWORD"),
+      }
+    } },
+    "test" => lambda { {
+      delivery_method: :test,
+      settings: {}
+    } },
+    "sendgrid" => lambda { {
+      delivery_method: :smtp,
+      settings: {
+        address: ENV.fetch("SENDGRID_HOST"),
+        port: ENV.fetch("SENDGRID_PORT").to_i,
+        user_name: ENV.fetch("SENDGRID_USERNAME"),
+        password: ENV.fetch("SENDGRID_PASSWORD"),
+      }
+    } }
+  }
 
-  Admins = [
-    "theshalvah"
-  ]
+  Configs = {
+    purge_lock_duration: 2 * 24 * 60 * 60,
+    admins: [
+      "theshalvah"
+    ],
+    mail: MailDrivers[ENV.fetch("MAIL_DRIVER")].call.merge({
+      from: "<Volgnie> purged@volgnie.com"
+    })
+  }
+
+  def self.get(key)
+    raise StandardError.new("Unknown config key #{key}") unless Configs.has_key?(key)
+    Configs[key]
+  end
 
   class << self
-    def mail
-      case ENV.fetch("MAIL_DRIVER")
-      when "mailtrap"
-        delivery_method, settings = [:smtp,
-          {
-            address: ENV.fetch("MAILTRAP_HOST"),
-            port: ENV.fetch("MAILTRAP_PORT").to_i,
-            user_name: ENV.fetch("MAILTRAP_USERNAME"),
-            password: ENV.fetch("MAILTRAP_PASSWORD"),
-          }
-        ]
-      when "test"
-        delivery_method, settings = [:test, {}]
-      when "mailgun"
-        delivery_method, settings = [:smtp, {}]
-      end
+    # So we can do AppConfig[:mail]
+    alias_method :[], :get
+  end
 
-      {
-        from: "purgereport@volgnie.app",
-        delivery_method: delivery_method,
-        settings: settings
-      }
-    end
+  def self.set(key, value)
+    raise StandardError.new("Unknown config key #{key}") unless Configs.has_key?(key)
+    Configs[key] = value
   end
 end

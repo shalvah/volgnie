@@ -46,7 +46,7 @@ Ready to begin?
 
   <br>
   <br>
-  <% if Config::Admins.include? current_user["username"] %>
+  <% if AppConfig.get(:admins).include? current_user["username"] %>
     <label>
       Simulate?
       <input type="checkbox" name="__simulate" checked>

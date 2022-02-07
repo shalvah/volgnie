@@ -3,6 +3,7 @@ require 'honeybadger'
 require_relative './lib/cache'
 require_relative './lib/twitter'
 require_relative './app/helpers'
+require_relative './app/config'
 require_relative './app/events'
 require_relative './app/purge/purger'
 require_relative './app/purge/preparer'
@@ -40,4 +41,10 @@ def finish_purge(event:, context:)
 
   cleaner = Purge::Cleaner.build(payload["user"], payload["purge_config"])
   cleaner.clean
+end
+
+# Only meant for direct invocation, to test a specific piece of functionality
+def sanities(event:, context:)
+  Honeybadger.configure { |h| h.report_data = false }
+  require_relative "./sanities/#{event}"
 end
