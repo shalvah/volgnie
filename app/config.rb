@@ -30,7 +30,7 @@ class AppConfig
       "theshalvah"
     ],
     mail: MailDrivers[ENV.fetch("MAIL_DRIVER")].call.merge({
-      from: "<Volgnie> purged@volgnie.com"
+      from: "Volgnie <purged@volgnie.com>"
     })
   }
 
