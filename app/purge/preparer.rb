@@ -3,11 +3,14 @@ require_relative "./errors"
 
 module Purge
 
+  # The Preparer gets things ready for the purge. It:
+  # - fetches the user's following and saves in Redis
+  # - fetches the user's followers (up to the specified limit) and returns, along with the user and purge config
   class Preparer
     DEFAULT_FOLLOWER_LIMIT = 5000
 
     def self.build(payload, follower_limit = DEFAULT_FOLLOWER_LIMIT)
-      new(payload, Twitter, Cache, follower_limit)
+      new(payload, Services[:twitter], Services[:cache], follower_limit)
     end
 
 

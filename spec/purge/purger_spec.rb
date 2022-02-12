@@ -22,7 +22,7 @@ RSpec.describe "Purge::Purger" do
         "username" => user[:username],
       },
       "purge_config" => {
-        "report_email" => "purge_here@volgnie.xyz",
+        "report_email" => "purge_here@volgnie.com",
         "level" => 3,
         "__simulate" => true,
       }

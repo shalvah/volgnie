@@ -1,16 +1,17 @@
 # frozen_string_literal: true
 
+require 'honeybadger' unless ENV["APP_ENV"] === "test"
 require 'sinatra'
-require 'honeybadger'
 require 'omniauth'
 require 'omniauth/strategies/twitter'
 require 'rack/protection'
+require_relative './config'
+require_relative './lib/services'
 require_relative './helpers'
 require_relative './web_helpers'
-require_relative '../lib/twitter'
-require_relative '../lib/cache'
+require_relative 'lib/twitter'
+require_relative 'lib/cache'
 require_relative './events'
-require_relative './config'
 require_relative './purge//criteria'
 
 set :sessions, expire_after: TWO_DAYS
@@ -56,10 +57,10 @@ get '/auth/twitter/callback' do
   #   "profile_image_url": "https://pbs.twimg.com/profile_images/1348334243898945536/1r1J6_vE_normal.jpg",
   #   "protected": false
   # }
-  session[:user] = Twitter.as_user(creds[:token], creds[:secret]).get_user(auth_info[:uid])
-  Cache.multi do
-    Cache.set("keys-#{auth_info[:uid]}", creds.to_json, ex: TWO_DAYS)
-    Cache.set("user-#{auth_info[:uid]}", session[:user].to_json, ex: TWO_DAYS)
+  session[:user] = Services[:twitter].as_user(creds[:token], creds[:secret]).get_user(auth_info[:uid])
+  Services[:cache].multi do
+    Services[:cache].set("keys-#{auth_info[:uid]}", creds.to_json, ex: TWO_DAYS)
+    Services[:cache].set("user-#{auth_info[:uid]}", session[:user].to_json, ex: TWO_DAYS)
   end
   redirect '/purge/start'
 end
@@ -87,7 +88,7 @@ post '/purge/start' do
   }
 
   # Don't let them fire purge multiple times
-  if Cache.set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: AppConfig[:purge_lock_duration])
+  if Services[:cache].set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: AppConfig[:purge_lock_duration])
     Events.purge_start({
       id: current_user["id"],
       following_count: current_user["public_metrics"]["following_count"],

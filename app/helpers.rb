@@ -15,11 +15,11 @@ def get_sns_payload(event)
   JSON.parse(event["Records"][0]["Sns"]["Message"])
 end
 
-def get_user_creds(user_id, cache = Cache)
+def get_user_creds(user_id, cache = Services[:cache])
   JSON.parse cache.get("keys-#{user_id}")
 end
 
-def get_twitter_client(twitter, user, cache = Cache)
+def get_twitter_client(twitter, user, cache = Services[:cache])
   creds = get_user_creds(user["id"], cache)
   twitter.as_user(creds["token"], creds["secret"])
 end

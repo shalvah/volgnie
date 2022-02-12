@@ -1,18 +1,7 @@
 require 'dotenv'
 Dotenv.load(File.expand_path("../.env.test", __dir__))
 
-require 'honeybadger'
-Honeybadger.configure { |c| c.report_data = false }
-
-require 'mock_redis'
-require 'redis'
-# Not the cleanest, I know
-class Redis
-  def self.new(*args)
-    MockRedis.new *args
-  end
-end
-
+require "mock_redis"
 require "factory_bot"
 require "faker"
 

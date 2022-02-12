@@ -35,6 +35,6 @@ class Mailer
 
   private
   def load_template
-    File.read(File.expand_path("../views/#{@view.to_s}.erb", __dir__))
+    File.read(File.expand_path("../../views/#{@view}.erb", __dir__))
   end
 end

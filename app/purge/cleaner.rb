@@ -1,4 +1,4 @@
-require_relative '../../lib/mailer'
+require_relative '../lib/mailer'
 require 'aws-sdk-cloudwatch'
 
 module Purge
@@ -9,7 +9,7 @@ module Purge
     def self.build(user, purge_config)
       cloudwatch_client = Aws::CloudWatch::Client.new
 
-      new(user, purge_config, Cache, cloudwatch_client)
+      new(user, purge_config, Services[:cache], cloudwatch_client)
     end
 
     def initialize(user, purge_config, cache, cloudwatch_client)

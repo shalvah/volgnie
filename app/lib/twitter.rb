@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'rest-client'
+require "rest-client"
 require "oauth"
 require "oauth/request_proxy/rest_client_request"
 
@@ -114,7 +114,9 @@ class TwitterApi
   end
 end
 
-Twitter = TwitterApi.new(
-  ENV.fetch('TWITTER_API_KEY'),
-  ENV.fetch('TWITTER_API_KEY_SECRET'),
-)
+Services.register(:twitter) do
+  TwitterApi.new(
+    ENV.fetch('TWITTER_API_KEY'),
+    ENV.fetch('TWITTER_API_KEY_SECRET'),
+  )
+end

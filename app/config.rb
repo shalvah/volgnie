@@ -1,5 +1,11 @@
+# frozen_string_literal: true
+
 class AppConfig
   MailDrivers = {
+    "test" => lambda { {
+      delivery_method: :test,
+      settings: {}
+    } },
     "mailtrap" => lambda { {
       delivery_method: :smtp,
       settings: {
@@ -8,10 +14,6 @@ class AppConfig
         user_name: ENV.fetch("MAILTRAP_USERNAME"),
         password: ENV.fetch("MAILTRAP_PASSWORD"),
       }
-    } },
-    "test" => lambda { {
-      delivery_method: :test,
-      settings: {}
     } },
     "sendgrid" => lambda { {
       delivery_method: :smtp,
@@ -31,7 +33,7 @@ class AppConfig
     ],
     mail: MailDrivers[ENV.fetch("MAIL_DRIVER")].call.merge({
       from: "Volgnie <purged@volgnie.com>"
-    })
+    }),
   }
 
   def self.get(key)

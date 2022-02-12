@@ -1,16 +1,13 @@
 
 require 'date'
 require_relative "./errors"
-require_relative "../../lib/aws"
+require_relative "../lib/aws"
 
 module Purge
 
   class RelationshipChecker
     def self.build(user)
-      lambda_client = ENV["IS_OFFLINE"] ? Aws::Lambda::Client.new({
-        endpoint: 'http://localhost:3002'
-      }) : Aws::Lambda::Client.new
-      new(user, Cache, lambda_client)
+      new(user, Services[:cache], Services[:lambda_client])
     end
 
     def initialize(user, cache, lambda_client, days_ago = 90)
@@ -21,7 +18,7 @@ module Purge
     end
 
     def is_following(follower)
-      following.include? { |f| f["id"] === follower["id"] }
+      following.find { |f| f["id"] === follower["id"] }
     end
 
     def has_replied_to_follower(follower)

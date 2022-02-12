@@ -17,7 +17,7 @@ purged_followers = rand(0..5).times.map do
   }
 end
 
-Cache.lpush("purged-followers-#{user["id"]}", purged_followers.map(&:to_json)) if purged_followers.size > 0
+Services[:cache].lpush("purged-followers-#{user["id"]}", purged_followers.map(&:to_json)) if purged_followers.size > 0
 
 puts "Purged followers: #{purged_followers.size}"
 
@@ -25,12 +25,12 @@ begin
   cleaner = Purge::Cleaner.build(user, purge_config)
   cleaner.clean
 
-  pf = Cache.lrange("purged-followers-#{user["id"]}", 0, -1)
+  pf = Services[:cache].lrange("purged-followers-#{user["id"]}", 0, -1)
   puts pf
   sleep 2
   raise StandardError.new("purged followers not deleted") if pf.size > 0
 ensure
-  Cache.del("purged-followers-#{user["id"]}", 0, -1)
+  Services[:cache].del("purged-followers-#{user["id"]}", 0, -1)
 end
 
 # Assertions (check manually)

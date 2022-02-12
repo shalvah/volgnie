@@ -1,7 +1,6 @@
 require_relative '../../app/purge/cleaner'
 
 RSpec.describe "Cleaner" do
-
   let(:mock_redis) { MockRedis.new }
   let(:followers_count) { 9 }
   let(:user) { build(:user, :with_ff, followers_count: followers_count) }
@@ -21,7 +20,7 @@ RSpec.describe "Cleaner" do
         "username" => user[:username],
       },
       "purge_config" => {
-        "report_email" => "purge_here@volgnie.xyz",
+        "report_email" => "purge_here@volgnie.com",
         "level" => 3,
         "__simulate" => true,
         "trigger_time" => Time.now.strftime("%B %-d, %Y at %H:%M:%S UTC%z")
@@ -40,7 +39,7 @@ RSpec.describe "Cleaner" do
   it "sends email report and removes user data" do
     expect(Mail::TestMailer.deliveries).to_not be_empty
     expect(Mail::TestMailer.deliveries).to include(an_object_satisfying do |mail|
-      mail.from == [AppConfig[:mail][:from]] && mail.to == [payload["purge_config"]["report_email"]]
+      AppConfig[:mail][:from].end_with?("<#{mail.from[0]}>") && mail.to == [payload["purge_config"]["report_email"]]
     end)
     expect(mock_redis.lrange("purged-followers-#{user[:id]}", 0, -1)).to be_empty
   end

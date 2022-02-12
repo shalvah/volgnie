@@ -41,32 +41,32 @@ RSpec.describe "Web UI" do
 
     before(:each) do
       env "rack.session", { user: user }
-      Events.__clear_dispatched
-      Cache.flushall
+      Services[:dispatcher].clear
+      Services[:cache].flushall
     end
 
     it "fires purge_start event" do
       post "/purge/start?email=#{email}&level=2"
-      expect(Events.__dispatched).to match_array([expected_event(payload)])
+      expect(Services[:dispatcher].dispatched).to match_array([expected_event(payload)])
     end
 
     it "will not fire purge_start event if already running" do
       AppConfig.set(:purge_lock_duration, 1)
 
       post "/purge/start?email=#{email}&level=2"
-      expect(Events.__dispatched).to match_array([expected_event(payload)])
+      expect(Services[:dispatcher].dispatched).to match_array([expected_event(payload)])
       post "/purge/start?email=#{email}&level=2"
-      expect(Events.__dispatched).to match_array([expected_event(payload)])
+      expect(Services[:dispatcher].dispatched).to match_array([expected_event(payload)])
       sleep 1
       post "/purge/start?email=#{email}&level=2"
-      expect(Events.__dispatched).to match_array([expected_event(payload), expected_event(payload)])
+      expect(Services[:dispatcher].dispatched).to match_array([expected_event(payload), expected_event(payload)])
     end
   end
 end
 
 def expected_event(payload)
     {
-      event: "purge_start",
+      event: :purge_start,
       payload: {
         user: payload[:user],
         purge_config: a_hash_including(payload[:purge_config])

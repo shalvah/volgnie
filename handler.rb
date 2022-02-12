@@ -1,9 +1,10 @@
 require 'bundler/setup'
-require 'honeybadger'
-require_relative './lib/cache'
-require_relative './lib/twitter'
-require_relative './app/helpers'
+require 'honeybadger' unless ENV["APP_ENV"] === "test"
 require_relative './app/config'
+require_relative './app/lib/services'
+require_relative './app/lib/cache'
+require_relative './app/lib/twitter'
+require_relative './app/helpers'
 require_relative './app/events'
 require_relative './app/purge/purger'
 require_relative './app/purge/preparer'
@@ -23,12 +24,14 @@ def purge_followers(event:, context:)
     purger.purge(payload["followers"])
   rescue Purge::ErrorDuringPurge => e
     # If an error occurs, serialize state so we can resume
-    Honeybadger.context({
-      aws_request_id: context["aws_request_id"],
-      user: payload["user"],
-      last_processed: e.last_processed,
-      total_size: payload["followers"].size,
-    })
+    unless ENV["APP_ENV"] == "test"
+      Honeybadger.context({
+        aws_request_id: context["aws_request_id"],
+        user: payload["user"],
+        last_processed: e.last_processed,
+        total_size: payload["followers"].size,
+      })
+    end
     # serialize
     raise
   end
