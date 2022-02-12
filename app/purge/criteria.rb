@@ -8,12 +8,11 @@ module Purge
     MUST_HAVE_REPLIED_TO = 3
     MUST_HAVE_INTERACTED = 2
 
-    def self.build(user, purge_config)
-      new(user, purge_config, RelationshipChecker.build(user))
+    def self.build(user, following, purge_config)
+      new(purge_config, Services[:relationship_checker].build(user, following))
     end
 
-    def initialize(user, purge_config, relationship_checker)
-      @user = user
+    def initialize(purge_config, relationship_checker)
       @config = purge_config
       @rc = relationship_checker
     end

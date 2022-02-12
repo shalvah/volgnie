@@ -7,9 +7,9 @@ class Events
       dispatch(:purge_start, payload)
     end
 
-    def fetched_followers(followers, user, purge_config)
+    def ready_to_purge(followers, user, purge_config)
       payload = { followers: followers, user: user, purge_config: purge_config}
-      dispatch(:fetched_followers, payload)
+      dispatch(:ready_to_purge, payload)
     end
 
     def purge_finish(user, purge_config)

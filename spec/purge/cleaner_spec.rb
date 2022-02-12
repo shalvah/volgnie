@@ -1,6 +1,6 @@
 require_relative '../../app/purge/cleaner'
 
-RSpec.describe "Cleaner" do
+RSpec.describe "Purge::Cleaner" do
   let(:mock_redis) { MockRedis.new }
   let(:followers_count) { 9 }
   let(:user) { build(:user, :with_ff, followers_count: followers_count) }

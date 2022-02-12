@@ -86,7 +86,7 @@ class TwitterApi
   def get_user(id)
     endpoint = "/users/#{id}"
     query_params = { "user.fields" => "id,name,profile_image_url,protected,public_metrics,username" }
-    request(:get, endpoint, query_params)
+    TwitterUser.new(**request(:get, endpoint, query_params))
   end
 
   def get_following(id, options = {}, &block)

@@ -7,12 +7,16 @@ module Purge
   class Purger
     MINIMUM_PURGE_TIME_MS = 500
 
-    def self.build(user, purge_config, &time_limit_proc)
-      new(user, Criteria.build(user, purge_config), Services[:twitter], Services[:cache], time_limit_proc, simulating: purge_config["__simulate"])
+    def self.build(user_hash, purge_config, &time_limit_proc)
+      following = JSON.parse(Services[:cache].get("following-#{user_hash["id"]}"))
+      criteria = Criteria.build(user_hash, following, purge_config)
+      new(
+        user_hash, criteria, Services[:twitter], Services[:cache], time_limit_proc, simulating: purge_config["__simulate"]
+      )
     end
 
     def initialize(user, purge_criteria, twitter, cache, time_limit_proc, simulating:)
-      @user = user
+      @user = AppUser.from(user)
       @criteria = purge_criteria
       @cache = cache
       @time_limit_proc = time_limit_proc

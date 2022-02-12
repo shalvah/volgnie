@@ -49,7 +49,7 @@ RSpec.describe "handlers" do
       def unblock(source_user_id, target_user_id) end
     end
 
-    class ::Purge::RelationshipChecker
+    class FakeRelationshipChecker < ::Purge::RelationshipChecker
       def has_replied_to_follower(follower)
         RepliedTo.include?(follower["username"])
       end
@@ -61,6 +61,7 @@ RSpec.describe "handlers" do
 
     Services[:dispatcher] = SynchronousDispatcher.new
     Services[:twitter] = FakeTwitterApi.new
+    Services[:relationship_checker] = FakeRelationshipChecker
     Services[:cache].set("keys-#{user[:id]}", { token: "sometoken", secret: "somesecret" }.to_json)
   end
 
@@ -73,53 +74,53 @@ RSpec.describe "handlers" do
   end
 
   it "purges non-mutuals" do
-    payload = payload(user, Purge::Criteria::MUTUAL)
+    payload = purge_payload(user, Purge::Criteria::MUTUAL)
 
-    Events.purge_start(payload[:user], payload[:purge_config])
+    Events.purge_start(payload["user"], payload["purge_config"])
 
     mail = Mail::TestMailer.deliveries[0]
     expect(AppConfig[:mail][:from].end_with?("<#{mail.from[0]}>")).to be(true)
-    expect(mail.to).to match([payload[:purge_config]["report_email"]])
+    expect(mail.to).to match([payload["purge_config"]["report_email"]])
     purged_count = user[:followers].size - Mutuals.size
     expect(mail.body.raw_source).to match("<b>#{purged_count}</b> of your followers matched that criteria and were removed.")
     expect(Services[:cache].lrange("purged-followers-#{user[:id]}", 0, -1)).to be_empty
   end
 
   it "purges non-replied-to but keeps mutuals" do
-    payload = payload(user, Purge::Criteria::MUST_HAVE_REPLIED_TO)
+    payload = purge_payload(user, Purge::Criteria::MUST_HAVE_REPLIED_TO)
 
-    Events.purge_start(payload[:user], payload[:purge_config])
+    Events.purge_start(payload["user"], payload["purge_config"])
 
     mail = Mail::TestMailer.deliveries[0]
     expect(AppConfig[:mail][:from].end_with?("<#{mail.from[0]}>")).to be(true)
-    expect(mail.to).to match([payload[:purge_config]["report_email"]])
+    expect(mail.to).to match([payload["purge_config"]["report_email"]])
     purged_count = user[:followers].size - (RepliedTo + Mutuals.map { _1[:username] }).uniq.size
     expect(mail.body.raw_source).to match("<b>#{purged_count}</b> of your followers matched that criteria and were removed.")
     expect(Services[:cache].lrange("purged-followers-#{user[:id]}", 0, -1)).to be_empty
   end
 
   it "purges non-interacted-with but keeps mutuals" do
-    payload = payload(user, Purge::Criteria::MUST_HAVE_INTERACTED)
+    payload = purge_payload(user, Purge::Criteria::MUST_HAVE_INTERACTED)
 
-    Events.purge_start(payload[:user], payload[:purge_config])
+    Events.purge_start(payload["user"], payload["purge_config"])
 
     mail = Mail::TestMailer.deliveries[0]
     expect(AppConfig[:mail][:from].end_with?("<#{mail.from[0]}>")).to be(true)
-    expect(mail.to).to match([payload[:purge_config]["report_email"]])
+    expect(mail.to).to match([payload["purge_config"]["report_email"]])
     purged_count = user[:followers].size - (BeenRepliedTo + RepliedTo + Mutuals.map { _1[:username] }).uniq.size
     expect(mail.body.raw_source).to match("<b>#{purged_count}</b> of your followers matched that criteria and were removed.")
     expect(Services[:cache].lrange("purged-followers-#{user[:id]}", 0, -1)).to be_empty
   end
 
   it "sends no_users_purged report if no users purged" do
-    payload = payload(user, Purge::Criteria::MUTUAL)
+    payload = purge_payload(user, Purge::Criteria::MUTUAL)
     old_following = User[:following]
     User[:following] = User[:followers] # Everybody is a mutual
-    Events.purge_start(payload[:user], payload[:purge_config])
+    Events.purge_start(payload["user"], payload["purge_config"])
 
     mail = Mail::TestMailer.deliveries[0]
     expect(AppConfig[:mail][:from].end_with?("<#{mail.from[0]}>")).to be(true)
-    expect(mail.to).to match([payload[:purge_config]["report_email"]])
+    expect(mail.to).to match([payload["purge_config"]["report_email"]])
     expect(mail.body.raw_source).to match("None of your followers matched that criteria")
     expect(Services[:cache].lrange("purged-followers-#{user[:id]}", 0, -1)).to be_empty
     User[:following] = old_following
@@ -129,40 +130,23 @@ RSpec.describe "handlers" do
     extra_followers = 5.times.map { build(:user) }
     user[:followers].concat(extra_followers)
 
-    payload = payload(user, Purge::Criteria::MUTUAL)
-    Events.purge_start(payload[:user], payload[:purge_config])
+    payload = purge_payload(user, Purge::Criteria::MUTUAL)
+    Events.purge_start(payload["user"], payload["purge_config"])
 
     mail = Mail::TestMailer.deliveries[0]
     expect(AppConfig[:mail][:from].end_with?("<#{mail.from[0]}>")).to be(true)
-    expect(mail.to).to match([payload[:purge_config]["report_email"]])
+    expect(mail.to).to match([payload["purge_config"]["report_email"]])
     purged_count = user[:followers].size - Mutuals.size - extra_followers.size
     expect(mail.body.raw_source).to match("<b>#{purged_count}</b> of your followers matched that criteria and were removed.")
     expect(Services[:cache].lrange("purged-followers-#{user[:id]}", 0, -1)).to be_empty
 
     user[:followers] = user[:followers][0..19]
   end
-
 end
 
 def event(name, payload)
   {
     event: name,
     payload: payload
-  }
-end
-
-def payload(user, level)
-  {
-    user: {
-      id: user[:id],
-      following_count: user[:following].size,
-      followers_count: user[:followers].size,
-      username: user[:username],
-    },
-    purge_config: {
-      "report_email" => "test@volgnie.com",
-      "level" => level,
-      "trigger_time" => Time.now.strftime("%B %-d, %Y at %H:%M:%S UTC%z"),
-    }
   }
 end

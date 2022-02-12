@@ -39,3 +39,19 @@ def stringify_keys(hash)
     obj[k.to_s] = v
   end
 end
+
+def purge_payload(user, level)
+  {
+    "user" => {
+      "id" => user[:id],
+      "following_count" => user[:following].size,
+      "followers_count" => user[:followers].size,
+      "username" => user[:username],
+    },
+    "purge_config" => {
+      "report_email" => "test@volgnie.com",
+      "level" => level,
+      "trigger_time" => Time.now.strftime("%B %-d, %Y at %H:%M:%S UTC%z"),
+    }
+  }
+end

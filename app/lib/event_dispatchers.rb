@@ -38,7 +38,7 @@ end
 class LocalDispatcher
   EVENT_HANDLERS = {
     purge_start: "start_purge",
-    fetched_followers: "purge_followers",
+    ready_to_purge: "purge_followers",
     purge_finish: "finish_purge",
   }
 

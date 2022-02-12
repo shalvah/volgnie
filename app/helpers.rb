@@ -19,7 +19,7 @@ def get_user_creds(user_id, cache = Services[:cache])
   JSON.parse cache.get("keys-#{user_id}")
 end
 
-def get_twitter_client(twitter, user, cache = Services[:cache])
-  creds = get_user_creds(user["id"], cache)
+def get_twitter_client(twitter, user_id, cache = Services[:cache])
+  creds = get_user_creds(user_id, cache)
   twitter.as_user(creds["token"], creds["secret"])
 end

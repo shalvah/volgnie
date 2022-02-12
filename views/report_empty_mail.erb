@@ -1,8 +1,8 @@
 <body style="font-family: Verdana, Helvetica, Arial, sans-serif">
-<h2>Hi @<%= @locals[:user]["username"] %>, your Twitter purge is complete!</h2>
+<h2>Hi @<%= @locals[:user].username %>, your Twitter purge is complete!</h2>
 
 You triggered this purge on <%= @locals[:purge_trigger_time] %>, when you had
-<b><%= @locals[:user]["followers_count"] %></b> followers. You asked us to
+<b><%= @locals[:user].followers_count %></b> followers. You asked us to
 <i><%= Purge::Criteria::to_text(@locals[:level]) %></i>.
 
 <br>

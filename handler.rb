@@ -1,6 +1,7 @@
 require 'bundler/setup'
 require 'honeybadger' unless ENV["APP_ENV"] === "test"
 require_relative './app/config'
+require_relative './app/models'
 require_relative './app/lib/services'
 require_relative './app/lib/cache'
 require_relative './app/lib/twitter'
@@ -10,10 +11,13 @@ require_relative './app/purge/purger'
 require_relative './app/purge/preparer'
 require_relative './app/purge/cleaner'
 
+# Idempotent. If this function fails midway, simply retry.
 def start_purge(event:, context:)
   payload = get_sns_payload event
   preparer = Purge::Preparer.build(payload)
-  Events.fetched_followers(*preparer.prepare)
+  preparer.save_following
+  followers = preparer.fetch_followers
+  Events.ready_to_purge(followers, payload["user"], payload["purge_config"])
 end
 
 def purge_followers(event:, context:)
@@ -39,6 +43,7 @@ def purge_followers(event:, context:)
   Events.purge_finish(payload["user"], payload["purge_config"])
 end
 
+# Idempotent. If this function fails midway, simply retry.
 def finish_purge(event:, context:)
   payload = get_sns_payload event
 

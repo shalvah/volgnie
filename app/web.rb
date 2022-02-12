@@ -6,6 +6,7 @@ require 'omniauth'
 require 'omniauth/strategies/twitter'
 require 'rack/protection'
 require_relative './config'
+require_relative './models'
 require_relative './lib/services'
 require_relative './helpers'
 require_relative './web_helpers'
@@ -43,20 +44,6 @@ get '/auth/twitter/callback' do
 
   auth_info = request.env['omniauth.auth']
   creds = auth_info.credentials
-  # User will be something like
-  # {
-  #   "username": "theshalvah",
-  #   "name": "jukai (樹海)",
-  #   "id": "876342319217332225",
-  #   "public_metrics": {
-  #     "followers_count": 7354,
-  #     "following_count": 138,
-  #     "tweet_count": 43875,
-  #     "listed_count": 62
-  #   },
-  #   "profile_image_url": "https://pbs.twimg.com/profile_images/1348334243898945536/1r1J6_vE_normal.jpg",
-  #   "protected": false
-  # }
   session[:user] = Services[:twitter].as_user(creds[:token], creds[:secret]).get_user(auth_info[:uid])
   Services[:cache].multi do
     Services[:cache].set("keys-#{auth_info[:uid]}", creds.to_json, ex: TWO_DAYS)
@@ -72,6 +59,7 @@ get '/auth/failure' do
 end
 
 get '/purge/start' do
+  # todo if protected
   redirect '/' if !current_user
   erb :start
 end
@@ -89,12 +77,7 @@ post '/purge/start' do
 
   # Don't let them fire purge multiple times
   if Services[:cache].set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: AppConfig[:purge_lock_duration])
-    Events.purge_start({
-      id: current_user["id"],
-      following_count: current_user["public_metrics"]["following_count"],
-      followers_count: current_user["public_metrics"]["followers_count"],
-      username: current_user["username"],
-    }, purge_config)
+    Events.purge_start(AppUser.from_twitter_user(current_user), purge_config)
   end
 
   erb :started, locals: {email: params[:email]}

@@ -4,7 +4,6 @@ require_relative './event_dispatchers'
 require 'redis'
 require_relative '../helpers'
 
-
 # Poor man's service container
 class Services
   Bindings = {
@@ -17,9 +16,11 @@ class Services
     },
 
     lambda_client: lambda {
-      ENV["IS_OFFLINE"] ? Aws::Lambda::Client.new({endpoint: 'http://localhost:3002'})
+      ENV["IS_OFFLINE"] ? Aws::Lambda::Client.new({ endpoint: 'http://localhost:3002' })
         : Aws::Lambda::Client.new
     },
+
+    relationship_checker: lambda { Purge::RelationshipChecker },
   }
 
   class << self
@@ -34,7 +35,7 @@ class Services
       @@__resolved[key] ||= Bindings[key].call
     end
 
-    # Override a resolved service
+    # Allows you to override a resolved service. Useful for testing
     def []=(key, value)
       raise StandardError.new("Unknown config key #{key}") unless Bindings.has_key?(key)
       @@__resolved[key] = value

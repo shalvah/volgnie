@@ -6,28 +6,28 @@ require_relative "../lib/aws"
 module Purge
 
   class RelationshipChecker
-    def self.build(user)
-      new(user, Services[:cache], Services[:lambda_client])
+    def self.build(user, following)
+      new(user, following, Services[:lambda_client])
     end
 
-    def initialize(user, cache, lambda_client, days_ago = 90)
-      @user = user
-      @cache = cache
+    def initialize(user, following, lambda_client, days_ago = 90)
+      @user = AppUser.from(user)
+      @following = following
       @lambda_client = lambda_client
       @days_ago = days_ago
     end
 
     def is_following(follower)
-      following.find { |f| f["id"] === follower["id"] }
+      @following.find { |f| f["id"] === follower["id"] }
     end
 
     def has_replied_to_follower(follower)
-      query = "from:#{@user["username"]} to:#{follower["username"]} since:#{since_date}"
+      query = "from:#{@user.username} to:#{follower["username"]} since:#{since_date}"
       query_tweets_exist?(query)
     end
 
     def has_replied_or_been_replied_to(follower)
-      query = "((from:#{@user["username"]} to:#{follower["username"]}) OR (from:#{follower["username"]} to:#{@user["username"]})) since:#{since_date}"
+      query = "((from:#{@user.username} to:#{follower["username"]}) OR (from:#{follower["username"]} to:#{@user.username})) since:#{since_date}"
       query_tweets_exist?(query)
     end
 
@@ -55,12 +55,6 @@ module Purge
       end
 
       result["exists"]
-    end
-
-    private
-
-    def following
-      @following ||= JSON.parse(@cache.get("following-#{@user["id"]}"))
     end
   end
 end

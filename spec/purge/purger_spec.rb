@@ -1,6 +1,6 @@
 require_relative '../../app/purge/purger'
 
-RSpec.describe "Purge::Purger" do
+RSpec.describe "Purge::Purger", :focus do
 
   let(:mock_twitter) { double(TwitterApi) }
   let(:mock_redis) { MockRedis.new }
@@ -59,7 +59,7 @@ RSpec.describe "Purge::Purger" do
     end.to raise_error do |error|
       expect(error).to be_a(Purge::OutOfTime)
       expect(error.last_processed[:index]).to eq(2)
-      expect(error.processing_for).to eq(payload["user"])
+      expect(error.processing_for).to eq(AppUser.from(payload["user"]))
     end
   end
 end
