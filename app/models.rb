@@ -21,7 +21,7 @@ AppUser = Struct.new(
   :id, :following_count, :followers_count, :username,
   keyword_init: true
 ) do
-  def self.from_twitter_user(user)
+  def self.from_twitter(user)
     new(
       id: user.id,
       following_count: user.public_metrics["following_count"],
@@ -32,6 +32,7 @@ AppUser = Struct.new(
 
   def self.from(user)
     return user if user.is_a?(AppUser)
+    return self.from_twitter(user) if user.is_a?(TwitterUser)
 
     AppUser.new(**user)
   end

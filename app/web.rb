@@ -18,8 +18,6 @@ require_relative './purge/criteria'
 set :sessions, expire_after: TWO_DAYS
 set :session_secret, ENV.fetch('SESSION_SECRET')
 set :views, settings.root + '/../views'
-set :show_exceptions, test? ? false : :after_handler
-
 
 use Rack::Protection::AuthenticityToken unless test?
 OmniAuth.config.allowed_request_methods = [:post]
@@ -30,19 +28,17 @@ use OmniAuth::Builder do
   }
 end
 
-get '/' do
-  erb :index
-end
+get('/') { erb :index }
 
 get '/auth/twitter/callback' do
   cache_control :no_store
 
-  auth_info = request.env['omniauth.auth']
-  creds = auth_info.credentials
-  session[:user] = Services[:twitter].as_user(creds[:token], creds[:secret]).get_user(auth_info[:uid])
-  Services[:cache].multi do
-    Services[:cache].set("keys-#{auth_info[:uid]}", creds.to_json, ex: TWO_DAYS)
-    Services[:cache].set("user-#{auth_info[:uid]}", session[:user].to_json, ex: TWO_DAYS)
+  auth = request.env['omniauth.auth']
+  creds = auth.credentials
+  session[:user] = Services[:twitter].as_user(creds[:token], creds[:secret]).get_user(auth[:uid])
+  Services[:cache].multi do |c|
+    c.set("keys-#{auth[:uid]}", creds.to_json, ex: TWO_DAYS)
+    c.set("user-#{auth[:uid]}", session[:user].to_json, ex: TWO_DAYS)
   end
   redirect '/purge/start'
 end
@@ -52,6 +48,8 @@ get '/auth/failure' do
   set_flash_error "Something went wrong. Please try logging in again."
   redirect "/"
 end
+
+post('/auth/logout') { session.clear && redirect('/') }
 
 get '/purge/start' do
   redirect '/' if !current_user
@@ -67,6 +65,7 @@ post '/purge/refresh-account' do
 
   session[:user] = updated
   Services[:cache].set("user-#{updated.id}", updated.to_json, ex: TWO_DAYS)
+  redirect '/purge/start'
 end
 
 post '/purge/start' do
@@ -77,12 +76,12 @@ post '/purge/start' do
     report_email: params[:email],
     level: params[:level].to_i,
     trigger_time: Time.now.strftime("%B %-d, %Y at %H:%M:%S UTC%z"), # December 24, 2021 at 01:20:36 UTC+0100
-    __simulate: AppConfig[:admins].include?(current_user["username"]) ? params[:__simulate] == "on" : false,
+    __simulate: AppConfig[:admins].include?(current_user.username) ? params[:__simulate] == "on" : false,
   }
 
   # Don't let them fire purge multiple times
   if Services[:cache].set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: AppConfig[:purge_lock_duration])
-    Events.purge_start(AppUser.from_twitter_user(current_user), purge_config)
+    Events.purge_start(AppUser.from(current_user), purge_config)
   end
 
   erb :started, locals: {email: params[:email]}

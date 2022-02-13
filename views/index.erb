@@ -30,4 +30,15 @@
   </form>
 </div>
 
+<% if current_user %>
+  <div>
+    <form action="/auth/logout" method="post">
+      <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
+      <div>
+        <button type="submit">Log out</button>
+      </div>
+    </form>
+  </div>
+<% end %>
+
 </html>
