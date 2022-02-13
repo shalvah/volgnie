@@ -23,10 +23,10 @@ AppUser = Struct.new(
 ) do
   def self.from_twitter_user(user)
     new(
-      id: user.dig(:id),
-      following_count: user.dig(:public_metrics, :following_count),
-      followers_count: user.dig(:public_metrics, :followers_count),
-      username: user.dig(:username),
+      id: user.id,
+      following_count: user.public_metrics["following_count"],
+      followers_count: user.public_metrics["followers_count"],
+      username: user.username,
     )
   end
 

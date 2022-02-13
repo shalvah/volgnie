@@ -13,18 +13,13 @@ require_relative './web_helpers'
 require_relative 'lib/twitter'
 require_relative 'lib/cache'
 require_relative './events'
-require_relative './purge//criteria'
+require_relative './purge/criteria'
 
 set :sessions, expire_after: TWO_DAYS
 set :session_secret, ENV.fetch('SESSION_SECRET')
 set :views, settings.root + '/../views'
 set :show_exceptions, test? ? false : :after_handler
 
-before do
-  # This is needed because sls-rack sets rack.errors (the error logger) to stderr
-  # And sls-offline sends stderr to browser
-  env["rack.errors"] = $stdout if ENV["IS_OFFLINE"]
-end
 
 use Rack::Protection::AuthenticityToken unless test?
 OmniAuth.config.allowed_request_methods = [:post]
@@ -59,13 +54,23 @@ get '/auth/failure' do
 end
 
 get '/purge/start' do
-  # todo if protected
   redirect '/' if !current_user
-  erb :start
+  erb current_user.protected ? :unlock_account : :start
+end
+
+post '/purge/refresh-account' do
+  redirect '/' unless current_user&.protected
+
+  creds = get_user_creds(current_user.id)
+  updated = Services[:twitter].as_user(creds["token"], creds["secret"]).get_user(current_user.id)
+  redirect '/purge/start' if updated.protected
+
+  session[:user] = updated
+  Services[:cache].set("user-#{updated.id}", updated.to_json, ex: TWO_DAYS)
 end
 
 post '/purge/start' do
-  redirect '/' if !current_user
+  redirect '/' if !current_user || current_user.protected
   halt 400, "Missing parameters" if !params[:email] || !params[:level]
 
   purge_config = {

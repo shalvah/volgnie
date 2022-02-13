@@ -1,0 +1,30 @@
+<html lang="en">
+
+<p>
+  Hi, <%= current_user["username"] %>!
+</p>
+
+<p>
+  You have <b><%= current_user["public_metrics"]["followers_count"] %></b> followers.
+</p>
+
+<p>
+  We'll go through <%= current_user_follower_limit_text %> followers and remove those who haven't interacted with you in
+  3 months. Then we'll send you a report of the followers we removed, via email.
+</p>
+
+<h3>Whoops...</h3>
+
+Unfortunately, your account is private. You'll need to unlock your account for the purge to work correctly. You can lock your account again when the purge is complete (we'll send you an email).
+
+<form action="/purge/refresh-account" method="post">
+  <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
+  <br>
+  <div>
+    <button type="submit">
+      I've unlocked my account
+    </button>
+  </div>
+</form>
+
+</html>

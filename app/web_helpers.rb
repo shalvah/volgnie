@@ -24,5 +24,6 @@ def set_flash_error(message)
 end
 
 def current_user_follower_limit_text
-  Integer(current_user.public_metrics.dig(:followers_count)) >= 5_000 ? "your latest 5,000" : "all your"
+  limit = Purge::DEFAULT_FOLLOWER_LIMIT
+  Integer(current_user.public_metrics["followers_count"]) >= limit ? "your latest #{limit}" : "all your"
 end
