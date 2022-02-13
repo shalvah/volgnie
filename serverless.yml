@@ -68,14 +68,16 @@ functions:
   start_purge:
     handler: handler.start_purge
     timeout: 120
+    maximumRetryAttempts: 2
     events:
       - sns: purge_start
 
   purge_followers:
     handler: handler.purge_followers
     timeout: 120
+    maximumRetryAttempts: 0 # We need a larger retry interval
     events:
-      - sns: fetched_followers
+      - sns: purge_ready
 
   finish_purge:
     handler: handler.finish_purge
@@ -94,8 +96,3 @@ functions:
 
   sanities:
     handler: handler.sanities
-
-custom:
-  rack:
-    # Only needed if serverless-rack (via `npm run offline:build`) isn't finding your Bundler
-    bundlerBin: ${env:BUNDLER_BIN, "bundle"}

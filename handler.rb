@@ -17,7 +17,7 @@ def start_purge(event:, context:)
   preparer = Purge::Preparer.build(payload)
   preparer.save_following
   followers = preparer.fetch_followers
-  Events.ready_to_purge(followers, payload["user"], payload["purge_config"])
+  Events.purge_ready(followers, payload["user"], payload["purge_config"])
 end
 
 def purge_followers(event:, context:)
