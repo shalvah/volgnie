@@ -1,13 +1,11 @@
 module Purge
 
   class ErrorDuringPurge < StandardError
-    attr_accessor :last_processed
-    attr_accessor :processing_for
   end
 
   class OutOfTime < ErrorDuringPurge
   end
 
-  class CouldntVerifyRelationship < ErrorDuringPurge
+  class SearchHandlerFailed < ErrorDuringPurge
   end
 end

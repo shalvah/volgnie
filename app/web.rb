@@ -1,18 +1,11 @@
 # frozen_string_literal: true
 
-require 'honeybadger' unless ENV["APP_ENV"] === "test"
+require_relative './../bootstrap'
 require 'sinatra'
 require 'omniauth'
 require 'omniauth/strategies/twitter'
 require 'rack/protection'
-require_relative './config'
-require_relative './models'
-require_relative './lib/services'
-require_relative './helpers'
 require_relative './web_helpers'
-require_relative 'lib/twitter'
-require_relative 'lib/cache'
-require_relative './events'
 require_relative './purge/criteria'
 
 set :sessions, expire_after: TWO_DAYS
@@ -72,12 +65,11 @@ post '/purge/start' do
   redirect '/' if !current_user || current_user.protected
   halt 400, "Missing parameters" if !params[:email] || !params[:level]
 
-  purge_config = {
+  purge_config = PurgeConfig.from({
     report_email: params[:email],
     level: params[:level].to_i,
-    trigger_time: Time.now.strftime("%B %-d, %Y at %H:%M:%S UTC%z"), # December 24, 2021 at 01:20:36 UTC+0100
     __simulate: AppConfig[:admins].include?(current_user.username) ? params[:__simulate] == "on" : false,
-  }
+  })
 
   # Don't let them fire purge multiple times
   if Services[:cache].set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: AppConfig[:purge_lock_duration])

@@ -8,7 +8,7 @@ purge_config = {
   "report_email" => "hello@shalvah.me",
   "level" => 2,
   "__simulate" => false,
-  "trigger_time" => Time.now.-(60 * 60 * 3).strftime("%B %-d, %Y at %H:%M:%S UTC%z")
+  "trigger_time" => Time.now.-(60 * 60 * 3)
 }
 purged_followers = rand(0..5).times.map do
   {

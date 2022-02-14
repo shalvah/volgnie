@@ -1,9 +1,6 @@
 const assert = require('assert');
 require('dotenv').config();
 const {searchTwitter} = require("../search_handler");
-require('@honeybadger-io/js').configure({
-    reportData: false
-});
 
 describe('search', function () {
     it('works to check existence', async function () {

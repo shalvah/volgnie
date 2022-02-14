@@ -1,4 +1,3 @@
-
 require 'date'
 require_relative "./errors"
 require_relative "../lib/aws"
@@ -48,13 +47,17 @@ module Purge
 
       # Docs say it's a String, but it seems to be returning a StringIO
       result = JSON.parse(response.payload.is_a?(StringIO) ? response.payload.string : response.payload)
-      if result["errorMessage"]
-        raise CouldntVerifyRelationship, "search Handler returned an error: #{result["ErrorMessage"]}"
-        # Shouldn't notify twice?
-        # Honeybadger.notify(result["errorMessage"], class_name: result["errorType"], backtrace: result["trace"])
-      end
-
+      raise_if_search_failed(result, query)
       result["exists"]
+    end
+
+    def raise_if_search_failed(result, query)
+      if result["errorMessage"]
+        Honeybadger.context({ query: query })
+        raise SearchHandlerFailed.new(
+          "Search handler returned an error: #{result["errorType"]} - #{result["errorMessage"]}.\nTrace: #{result["trace"]}"
+        )
+      end
     end
   end
 end

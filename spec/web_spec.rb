@@ -25,51 +25,49 @@ RSpec.describe "Web UI" do
   describe "/purge/start" do
 
     email = "test@volgnie.com"
-    payload = {
-      user: {
-        id: user["id"],
-        following_count: user["public_metrics"]["following_count"],
-        followers_count: user["public_metrics"]["followers_count"],
-        username: user["username"],
-      },
-      purge_config: {
-        report_email: email,
-        level: 2,
-        __simulate: false,
+    expected_event = {
+      event: :purge_start,
+      payload: {
+        user: AppUser.from({
+          id: user["id"],
+          following_count: user["public_metrics"]["following_count"],
+          followers_count: user["public_metrics"]["followers_count"],
+          username: user["username"],
+        }),
+        purge_config: PurgeConfig.from({
+          report_email: email,
+          level: 2,
+          __simulate: false,
+        })
       }
     }
 
     before(:each) do
-      env "rack.session", { user: user }
+      env "rack.session", { user: TwitterUser.new(**user) }
       Services[:dispatcher].clear
       Services[:cache].flushall
     end
 
     it "fires purge_start event" do
       post "/purge/start?email=#{email}&level=2"
-      expect(Services[:dispatcher].dispatched).to match_array([expected_event(payload)])
+      # A bit hacky, but it'll do
+      expected_event[:payload][:purge_config][:trigger_time] = Services[:dispatcher].dispatched[0][:payload][:purge_config].trigger_time
+      expect(Services[:dispatcher].dispatched).to match_array([expected_event])
     end
 
     it "will not fire purge_start event if already running" do
       AppConfig.set(:purge_lock_duration, 1)
 
       post "/purge/start?email=#{email}&level=2"
-      expect(Services[:dispatcher].dispatched).to match_array([expected_event(payload)])
+      expected_event[:payload][:purge_config][:trigger_time] = Services[:dispatcher].dispatched[0][:payload][:purge_config].trigger_time
+      expect(Services[:dispatcher].dispatched).to match_array([expected_event])
       post "/purge/start?email=#{email}&level=2"
-      expect(Services[:dispatcher].dispatched).to match_array([expected_event(payload)])
+      expected_event[:payload][:purge_config][:trigger_time] = Services[:dispatcher].dispatched[0][:payload][:purge_config].trigger_time
+      expect(Services[:dispatcher].dispatched).to match_array([expected_event])
       sleep 1
       post "/purge/start?email=#{email}&level=2"
-      expect(Services[:dispatcher].dispatched).to match_array([expected_event(payload), expected_event(payload)])
+      expected_event[:payload][:purge_config][:trigger_time] = Services[:dispatcher].dispatched[0][:payload][:purge_config].trigger_time =  Services[:dispatcher].dispatched[1][:payload][:purge_config].trigger_time
+      expect(Services[:dispatcher].dispatched).to match_array([expected_event, expected_event])
     end
   end
-end
-
-def expected_event(payload)
-    {
-      event: :purge_start,
-      payload: {
-        user: payload[:user],
-        purge_config: a_hash_including(payload[:purge_config])
-      }
-    }
 end

@@ -13,13 +13,13 @@ module Purge
     end
 
     def initialize(purge_config, relationship_checker)
-      @config = purge_config
+      @config = PurgeConfig.from(purge_config)
       @rc = relationship_checker
     end
 
     def passes(follower)
       this_user = @rc
-      case @config["level"]
+      case @config.level
       when MUTUAL
         this_user.is_following(follower)
       when MUST_HAVE_REPLIED_TO

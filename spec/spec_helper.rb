@@ -51,7 +51,7 @@ def purge_payload(user, level)
     "purge_config" => {
       "report_email" => "test@volgnie.com",
       "level" => level,
-      "trigger_time" => Time.now.strftime("%B %-d, %Y at %H:%M:%S UTC%z"),
+      "__simulate" => false,
     }
   }
 end

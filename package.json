@@ -3,7 +3,8 @@
     "offline:build": "serverless rack install",
     "offline": "serverless offline --noPrependStageInUrl --httpPort 9787",
     "test": "mocha spec/*.js",
-    "sanity": "serverless invoke local --function sanities -d"
+    "sanity": "serverless invoke local --function sanities -d",
+    "invoke": "serverless invoke local --function"
   },
   "devDependencies": {
     "dotenv": "^10.0.0",
@@ -13,7 +14,7 @@
     "serverless-rack": "github:shalvah/serverless-rack"
   },
   "dependencies": {
-    "@honeybadger-io/js": "^3.2.7",
+    "@honeybadger-io/js": "4.0.0-beta.0",
     "chrome-aws-lambda": "^10.1.0",
     "puppeteer-core": "^10.4.0"
   }

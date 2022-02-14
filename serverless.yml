@@ -93,6 +93,7 @@ functions:
     timeout: 60
     environment:
       CHROMIUM_EXECUTABLE: ${env:CHROMIUM_EXECUTABLE, ""}
+      NODE_ENV: ${env:NODE_ENV}
 
   sanities:
     handler: handler.sanities

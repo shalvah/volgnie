@@ -23,7 +23,6 @@ RSpec.describe "Purge::Cleaner" do
         "report_email" => "purge_here@volgnie.com",
         "level" => 3,
         "__simulate" => true,
-        "trigger_time" => Time.now.strftime("%B %-d, %Y at %H:%M:%S UTC%z")
       }
     }
   }

@@ -1,6 +1,6 @@
 require_relative '../../app/purge/purger'
 
-RSpec.describe "Purge::Purger", :focus do
+RSpec.describe "Purge::Purger" do
 
   let(:mock_twitter) { double(TwitterApi) }
   let(:mock_redis) { MockRedis.new }
@@ -30,10 +30,11 @@ RSpec.describe "Purge::Purger", :focus do
   }
 
   before(:each) do
+    user[:followers] = user[:followers].map { |f| stringify_keys(f) }
     allow(mock_twitter).to receive(:as_user).and_return(mock_twitter)
     mock_redis.set("keys-#{user[:id]}", { token: "tokennn", secret: "secrettt" }.to_json)
     expect(criteria).to receive(:passes).at_most(followers_count).times do |follower|
-      index = user[:followers].find_index { |f| f[:id] == follower[:id] }
+      index = user[:followers].find_index { |f| f["id"] == follower["id"] }
       !failing_follower_indices.include?(index)
     end
   end
@@ -44,7 +45,7 @@ RSpec.describe "Purge::Purger", :focus do
     purger = Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, time_limit_proc, simulating: true)
     purger.purge user[:followers]
 
-    purged = failing_follower_indices.map { |i| stringify_keys(user[:followers][i]) }
+    purged = failing_follower_indices.map { |i| user[:followers][i] }
     actual_purged = mock_redis.lrange("purged-followers-#{user[:id]}", 0, -1).map { |u| JSON.parse(u) }
     expect(actual_purged).to contain_exactly *purged
   end
@@ -53,13 +54,47 @@ RSpec.describe "Purge::Purger", :focus do
     time_limit_proc = double(Proc)
     allow(time_limit_proc).to receive(:call).and_return(100_000, 100_000, 4000, 100)
 
-    expect do
-      purger = Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, time_limit_proc, simulating: true)
-      purger.purge user[:followers]
-    end.to raise_error do |error|
+    purger = Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, time_limit_proc, simulating: true)
+    expect { purger.purge user[:followers] }.to raise_error do |error|
       expect(error).to be_a(Purge::OutOfTime)
-      expect(error.last_processed[:index]).to eq(2)
-      expect(error.processing_for).to eq(AppUser.from(payload["user"]))
+      expect(mock_redis.get("purge-last-processed-#{user[:id]}")).to eq(user[:followers][2]["id"])
     end
+  end
+
+  it "is idempotent: can continue from previous failures" do
+    time_limit_proc = proc { Float::INFINITY }
+
+    criteria = double(Purge::Criteria)
+    expect(criteria).to receive(:passes).and_raise("An error occurred") # Fail at the first follower
+    purger = Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, time_limit_proc, simulating: true)
+
+    expect { purger.purge user[:followers] }.to raise_error do |error|
+      expect(error).to be_a(Purge::ErrorDuringPurge)
+      expect(mock_redis.get("purge-last-processed-#{user[:id]}")).to eq(nil)
+    end
+
+    criteria = double(Purge::Criteria)
+    expect(criteria).to receive(:passes).at_most(followers_count).times do |follower|
+      index = user[:followers].find_index { |f| f["id"] == follower["id"] }
+      raise StandardError.new("An error occurred") if index == 3 # Fail at the fourth follower
+      !failing_follower_indices.include?(index)
+    end
+    purger = Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, time_limit_proc, simulating: true)
+    expect { purger.purge user[:followers] }.to raise_error do |error|
+      expect(error).to be_a(Purge::ErrorDuringPurge)
+      expect(mock_redis.get("purge-last-processed-#{user[:id]}")).to eq(user[:followers][2]["id"])
+    end
+
+    criteria = double(Purge::Criteria)
+    expect(criteria).to receive(:passes).at_most(followers_count).times do |follower|
+      index = user[:followers].find_index { |f| f["id"] == follower["id"] }
+      !failing_follower_indices.include?(index)
+    end
+    purger = Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, time_limit_proc, simulating: true)
+    purger.purge user[:followers]
+
+    purged = failing_follower_indices.map { |i| user[:followers][i] }
+    actual_purged = mock_redis.lrange("purged-followers-#{user[:id]}", 0, -1).map { |u| JSON.parse(u) }
+    expect(actual_purged).to contain_exactly *purged
   end
 end

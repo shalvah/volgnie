@@ -6,6 +6,7 @@ Services.register(:cache) do
   when "test"
     MockRedis.new
   else
+    Redis.exists_returns_integer = true
     redis_options = {
       host: ENV.fetch('REDIS_HOSTNAME'),
       port: ENV.fetch('REDIS_PORT'),

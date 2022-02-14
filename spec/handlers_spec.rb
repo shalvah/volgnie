@@ -4,7 +4,7 @@ require_relative '../app/purge/criteria'
 
 RSpec.describe "handlers" do
   user = nil
-  Purge::Preparer::DEFAULT_FOLLOWER_LIMIT = 20 # Only check the first 20 followers
+  Purge::DEFAULT_FOLLOWER_LIMIT = 20 # Only check the first 20 followers
 
   before(:all) do
     # Set up a fake user and followers that we'll run our test on.
@@ -40,7 +40,7 @@ RSpec.describe "handlers" do
 
       def get_followers(id, options = {}, &block)
         catch(:stop_chunks) do
-          User[:followers].each_slice(Purge::Preparer::DEFAULT_FOLLOWER_LIMIT) { |s| block.call(s, {}) }
+          User[:followers].each_slice(Purge::DEFAULT_FOLLOWER_LIMIT) { |s| block.call(s, {}) }
         end
       end
 
@@ -62,11 +62,15 @@ RSpec.describe "handlers" do
     Services[:dispatcher] = SynchronousDispatcher.new
     Services[:twitter] = FakeTwitterApi.new
     Services[:relationship_checker] = FakeRelationshipChecker
-    Services[:cache].set("keys-#{user[:id]}", { token: "sometoken", secret: "somesecret" }.to_json)
   end
 
   before(:each) do
     Mail::TestMailer.deliveries.clear
+    Services[:cache].set("keys-#{user[:id]}", { token: "sometoken", secret: "somesecret" }.to_json)
+  end
+
+  after(:each) do
+    Services[:cache].flushall
   end
 
   after(:all) do

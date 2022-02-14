@@ -1,12 +1,5 @@
 require 'bundler/setup'
-require 'honeybadger' unless ENV["APP_ENV"] === "test"
-require_relative './app/config'
-require_relative './app/models'
-require_relative './app/lib/services'
-require_relative './app/lib/cache'
-require_relative './app/lib/twitter'
-require_relative './app/helpers'
-require_relative './app/events'
+require_relative './bootstrap'
 require_relative './app/purge/purger'
 require_relative './app/purge/preparer'
 require_relative './app/purge/cleaner'
@@ -14,31 +7,17 @@ require_relative './app/purge/cleaner'
 # Idempotent. If this function fails midway, simply retry.
 def start_purge(event:, context:)
   payload = get_sns_payload event
-  preparer = Purge::Preparer.build(payload)
+  preparer = Purge::Preparer.build(payload["user"])
   preparer.save_following
   followers = preparer.fetch_followers
   Events.purge_ready(followers, payload["user"], payload["purge_config"])
 end
 
+# Idempotent. If this function fails midway, simply retry.
 def purge_followers(event:, context:)
   payload = get_sns_payload event
   purger = Purge::Purger.build(payload["user"], payload["purge_config"]) { context.get_remaining_time_in_millis }
-
-  begin
-    purger.purge(payload["followers"])
-  rescue Purge::ErrorDuringPurge => e
-    # If an error occurs, serialize state so we can resume
-    unless ENV["APP_ENV"] == "test"
-      Honeybadger.context({
-        aws_request_id: context["aws_request_id"],
-        user: payload["user"],
-        last_processed: e.last_processed,
-        total_size: payload["followers"].size,
-      })
-    end
-    # serialize
-    raise
-  end
+  purger.purge(payload["followers"])
 
   Events.purge_finish(payload["user"], payload["purge_config"])
 end
