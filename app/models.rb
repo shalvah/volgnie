@@ -16,7 +16,7 @@ TwitterUser = Struct.new(
   :username, :name, :id, :public_metrics, :profile_image_url, :protected,
   keyword_init: true
 ) do
-  def to_json
+  def to_json(options = {})
     to_h.to_json # Seriously, Ruby?
   end
 end
@@ -25,7 +25,7 @@ AppUser = Struct.new(
   :id, :following_count, :followers_count, :username,
   keyword_init: true
 ) do
-  def to_json
+  def to_json(options = {})
     to_h.to_json # Seriously, Ruby?
   end
 
@@ -51,7 +51,7 @@ PurgeConfig = Struct.new(
   :level, :__simulate, :report_email, :trigger_time,
   keyword_init: true
 ) do
-  def to_json
+  def to_json(options = {})
     to_h.to_json # Seriously, Ruby?
   end
 

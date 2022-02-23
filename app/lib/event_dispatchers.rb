@@ -44,10 +44,10 @@ class LocalDispatcher
 
   def dispatch(topic, payload)
     # On local, run the function in a separate process
-    event = fake_sns_event(payload).to_json.to_json # Yep
-    command = "sls invoke local -f #{EVENT_HANDLERS[topic]} -d #{event}"
-    # Note: for some reason, `sls invoke``deletes the rack_adapter handler,
-    # so, after this, you'll have to recreate it with `npm run offline:build``
+    event = fake_sns_event(payload).to_json.to_json # Yes
+    Dir.mkdir("tmp") unless File.exists?("tmp")
+    File.write("tmp/event_data.json", event)
+    command = "sls invoke local -f #{EVENT_HANDLERS[topic]} --path tmp/event_data.json"
     spawn(command, { [STDERR, STDOUT] => STDOUT })
   end
 

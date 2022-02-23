@@ -16,7 +16,7 @@ class Services
     },
 
     lambda_client: lambda {
-      ENV["IS_OFFLINE"] ? Aws::Lambda::Client.new({ endpoint: 'http://localhost:3002' })
+      (ENV["IS_OFFLINE"] || ENV["IS_LOCAL"]) ? Aws::Lambda::Client.new({ endpoint: 'http://localhost:3002' })
         : Aws::Lambda::Client.new
     },
 

@@ -18,4 +18,5 @@ Services.register(:cache) do
   end
 end
 
-TWO_DAYS = 2 * 24 * 60 * 60
+ONE_DAY = 24 * 60 * 60
+TWO_DAYS = 2 * ONE_DAY
