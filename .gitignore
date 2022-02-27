@@ -4,4 +4,4 @@ preferences.arc
 .env
 .serverless-rack-temp
 vendor/bundle
-_*.png
+tmp/

@@ -5,21 +5,7 @@ on:
   pull_request:
 
 jobs:
-  nodejs_test:
-    runs-on: ubuntu-latest
-    name: Node.js Tests (Node.js 16.x)
-    steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js 16.x
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16.5.0
-      - run: npm ci --production=false
-      - run: npm i puppeteer@10.1
-      - name: Tests
-        run: npm test
-
-  ruby_test:
+  test:
     runs-on: ubuntu-latest
     name: Ruby Tests (Ruby 2.7)
     steps:

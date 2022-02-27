@@ -35,9 +35,6 @@ provider:
     - Effect: Allow
       Action: [ "cloudwatch:PutMetricData" ]
       Resource: [ "*" ]
-    - Effect: Allow
-      Action: [ "lambda:InvokeFunction" ]
-      Resource: [ "*" ]
   environment: ${file(./environment.yml)}
 
 package:
@@ -49,9 +46,11 @@ package:
     - '!.env*'
     - '!spec/**'
     - '!.github/**'
+    - '!tmp/**'
     - app/**
     - rack_adapter.rb
     - serverless_rack.rb
+    - .serverless_rack
     - views/**
     - vendor/bundle/**
     - .bundle/**
@@ -67,7 +66,7 @@ functions:
 
   start_purge:
     handler: handler.start_purge
-    timeout: 120
+    timeout: 90
     maximumRetryAttempts: 2
     events:
       - sns: purge_start
@@ -84,16 +83,6 @@ functions:
     timeout: 20
     events:
       - sns: purge_finish
-
-  search_twitter:
-    handler: search_handler.searchTwitter
-    runtime: nodejs14.x
-    # Uses Puppeteer, so needs enough memory
-    memorySize: 1600
-    timeout: 60
-    environment:
-      CHROMIUM_EXECUTABLE: ${env:CHROMIUM_EXECUTABLE, ""}
-      NODE_ENV: ${env:NODE_ENV}
 
   sanities:
     handler: handler.sanities
