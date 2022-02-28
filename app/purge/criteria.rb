@@ -17,16 +17,25 @@ module Purge
       @rc = relationship_checker
     end
 
-    def passes(follower)
+    def check_batch(followers)
       this_user = @rc
-      case @config.level
-      when MUTUAL
-        this_user.is_following(follower)
-      when MUST_HAVE_REPLIED_TO
-        this_user.is_following(follower) || this_user.has_replied_to_follower(follower)
-      when MUST_HAVE_INTERACTED
-        this_user.is_following(follower) || this_user.has_replied_or_been_replied_to(follower)
+      mutuals = followers.map { |f| this_user.is_following(f) }
+
+      return mutuals if @config.level == MUTUAL
+
+      to_fetch = followers.zip(mutuals).flat_map { |f, is_mutual| is_mutual ? [] : [f] }
+      return mutuals if to_fetch.empty?
+
+      results = case @config.level
+        when MUST_HAVE_REPLIED_TO
+          this_user.has_replied_to_follower_bulk(to_fetch)
+        when MUST_HAVE_INTERACTED
+          this_user.has_replied_or_been_replied_to_bulk(to_fetch)
       end
+
+      # Merge results
+      results_iter = results.each
+      mutuals.map { |is_mutual| is_mutual || results_iter.next }
     end
 
     def self.to_text(level)

@@ -16,26 +16,32 @@ module Purge
     end
 
     def is_following(follower)
-      @following.find { |f| f["id"] === follower["id"] }
+      @following.find { |f| f["id"] == follower["id"] }
     end
 
-    def has_replied_to_follower(follower)
-      query = "from:#{@user.username} to:#{follower["username"]} since:#{since_date}"
-      query_tweets_exist?(query)
+    def has_replied_to_follower_bulk(followers)
+      date = since_date
+      queries = followers.map do |f|
+        "from:#{@user.username} to:#{f["username"]} since:#{date}"
+      end
+      query_tweets_exist?(queries)
     end
 
-    def has_replied_or_been_replied_to(follower)
-      query = "((from:#{@user.username} to:#{follower["username"]}) OR (from:#{follower["username"]} to:#{@user.username})) since:#{since_date}"
-      query_tweets_exist?(query)
+    def has_replied_or_been_replied_to_bulk(followers)
+      date = since_date
+      queries = followers.map do |f|
+        "((from:#{@user.username} to:#{f["username"]}) OR (from:#{f["username"]} to:#{@user.username})) since:#{date}"
+      end
+      query_tweets_exist?(queries)
     end
 
     def since_date
       (Date.today - @days_ago).to_s
     end
 
-    def query_tweets_exist?(query)
+    def query_tweets_exist?(queries)
       payload = {
-        queries: [query],
+        queries: queries,
         checkExistenceOnly: true
       }
 
