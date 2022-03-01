@@ -1,18 +1,13 @@
 require_relative '../../app/purge/purger'
 
 RSpec.describe "Purge::Purger" do
-
   let(:mock_twitter) { double(TwitterApi) }
   let(:mock_redis) { MockRedis.new }
-  let(:followers_count) { 9 }
+  let(:followers_count) { 14 }
   let(:user) { build(:user, :with_ff, followers_count: followers_count) }
   let(:criteria) { double(Purge::Criteria) }
-  let(:failing_follower_indices) {
-    Faker::Number.unique.clear
-    Faker::Number.within(range: 1...followers_count).to_i.times.map do
-      Faker::Number.unique.within(range: 0...followers_count).to_i
-    end
-  }
+  let(:failing_follower_indices) { [1, 3, 4, 10, 6, 13] }
+  let!(:failing_follower_ids) { failing_follower_indices.map { user[:followers][_1][:id] } }
   let(:payload) {
     {
       "user" => {
@@ -31,70 +26,91 @@ RSpec.describe "Purge::Purger" do
 
   before(:each) do
     user[:followers] = user[:followers].map { |f| stringify_keys(f) }
-    allow(mock_twitter).to receive(:as_user).and_return(mock_twitter)
     mock_redis.set("keys-#{user[:id]}", { token: "tokennn", secret: "secrettt" }.to_json)
-    expect(criteria).to receive(:passes).at_most(followers_count).times do |follower|
-      index = user[:followers].find_index { |f| f["id"] == follower["id"] }
-      !failing_follower_indices.include?(index)
+    allow(mock_twitter).to receive(:as_user).and_return(mock_twitter)
+    allow(criteria).to receive(:check_batch).thrice do |batch|
+      batch.map { |f| !failing_follower_ids.include?(f["id"]) }
     end
   end
 
-  it "runs purge as expected" do
-    time_limit_proc = proc { Float::INFINITY }
+  batch_size = 5
+  subject(:purger) {
+    Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, batch_size: batch_size, simulating: true)
+  }
 
-    purger = Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, time_limit_proc, simulating: true)
-    purger.purge user[:followers]
+  it "purges a batch as expected" do
+    expect(criteria).to receive(:check_batch).once
 
-    purged = failing_follower_indices.map { |i| user[:followers][i] }
-    actual_purged = mock_redis.lrange("purged-followers-#{user[:id]}", 0, -1).map { |u| JSON.parse(u) }
-    expect(actual_purged).to contain_exactly *purged
+    expect { purger.purge_next_batch user[:followers] }.to raise_error(Purge::DoneWithBatch)
+
+    expect(batches_processed).to eq(1)
+    first_batch_purged = expected_purged { _1 < batch_size }
+    expect(actual_purged).to contain_exactly(*first_batch_purged)
   end
 
-  it "stops if out of time" do
-    time_limit_proc = double(Proc)
-    allow(time_limit_proc).to receive(:call).and_return(100_000, 100_000, 4000, 100)
+  it "is idempotent: can complete purge in batches" do
+    expect(criteria).to receive(:check_batch).thrice
 
-    purger = Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, time_limit_proc, simulating: true)
-    expect { purger.purge user[:followers] }.to raise_error do |error|
-      expect(error).to be_a(Purge::OutOfTime)
-      expect(mock_redis.get("purge-last-processed-#{user[:id]}")).to eq(user[:followers][2]["id"])
+    # First run
+    expect { purger.purge_next_batch user[:followers] }.to raise_error(Purge::DoneWithBatch)
+
+    expect(batches_processed).to eq(1)
+    first_batch_purged = expected_purged { _1 < batch_size }
+    expect(actual_purged).to contain_exactly(*first_batch_purged)
+
+    # Complete the purge
+    2.times do
+      expect { purger.purge_next_batch user[:followers] }.to raise_error(Purge::DoneWithBatch)
     end
+    expect(batches_processed).to eq(3)
+    expect(actual_purged).to contain_exactly *expected_purged
+
+    # An extra run; nothing should change
+    expect(purger.purge_next_batch user[:followers]).to eq(true)
+    expect(batches_processed).to eq(3)
+    expect(actual_purged).to contain_exactly *expected_purged
   end
 
-  it "is idempotent: can continue from previous failures" do
-    time_limit_proc = proc { Float::INFINITY }
+  it "is idempotent: will retry batch if unexpected error happens" do
+    expect(criteria).to receive(:check_batch).and_raise(RuntimeError)
 
-    criteria = double(Purge::Criteria)
-    expect(criteria).to receive(:passes).and_raise("An error occurred") # Fail at the first follower
-    purger = Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, time_limit_proc, simulating: true)
+    # First run
+    expect { purger.purge_next_batch user[:followers] }.to raise_error(RuntimeError)
 
-    expect { purger.purge user[:followers] }.to raise_error do |error|
-      expect(error).to be_a(Purge::ErrorDuringPurge)
-      expect(mock_redis.get("purge-last-processed-#{user[:id]}")).to eq(nil)
+    expect(batches_processed).to eq(0)
+    expect(actual_purged).to eq([])
+
+    # Go again
+    expect { purger.purge_next_batch user[:followers] }.to raise_error(Purge::DoneWithBatch)
+    expect(batches_processed).to eq(1)
+    first_batch_purged = expected_purged { _1 < batch_size }
+    expect(actual_purged).to contain_exactly(*first_batch_purged)
+
+    # Another error
+    expect(criteria).to receive(:check_batch).and_raise(RuntimeError)
+
+    expect { purger.purge_next_batch user[:followers] }.to raise_error(RuntimeError)
+    expect(batches_processed).to eq(1)
+    expect(actual_purged).to contain_exactly(*first_batch_purged)
+
+    # Finally, finish
+    2.times do
+      expect { purger.purge_next_batch user[:followers] }.to raise_error(Purge::DoneWithBatch)
     end
-
-    criteria = double(Purge::Criteria)
-    expect(criteria).to receive(:passes).at_most(followers_count).times do |follower|
-      index = user[:followers].find_index { |f| f["id"] == follower["id"] }
-      raise StandardError.new("An error occurred") if index == 3 # Fail at the fourth follower
-      !failing_follower_indices.include?(index)
-    end
-    purger = Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, time_limit_proc, simulating: true)
-    expect { purger.purge user[:followers] }.to raise_error do |error|
-      expect(error).to be_a(Purge::ErrorDuringPurge)
-      expect(mock_redis.get("purge-last-processed-#{user[:id]}")).to eq(user[:followers][2]["id"])
-    end
-
-    criteria = double(Purge::Criteria)
-    expect(criteria).to receive(:passes).at_most(followers_count).times do |follower|
-      index = user[:followers].find_index { |f| f["id"] == follower["id"] }
-      !failing_follower_indices.include?(index)
-    end
-    purger = Purge::Purger.new(payload["user"], criteria, mock_twitter, mock_redis, time_limit_proc, simulating: true)
-    purger.purge user[:followers]
-
-    purged = failing_follower_indices.map { |i| user[:followers][i] }
-    actual_purged = mock_redis.lrange("purged-followers-#{user[:id]}", 0, -1).map { |u| JSON.parse(u) }
-    expect(actual_purged).to contain_exactly *purged
+    expect(batches_processed).to eq(3)
+    expect(actual_purged).to contain_exactly(*expected_purged)
   end
+
+  def batches_processed
+    mock_redis.get("purge-#{user[:id]}-batches-processed").to_i
+  end
+
+  def expected_purged(&filter_block)
+    user[:followers].values_at(*failing_follower_indices.filter(&(filter_block || :itself)))
+  end
+
+  def actual_purged
+    mock_redis.smembers("purged-followers-#{user[:id]}").map { |u| JSON.parse(u) }
+  end
+
 end

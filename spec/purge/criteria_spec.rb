@@ -11,6 +11,8 @@ RSpec.describe "Purge::Criteria" do
     })
   }
 
+  subject(:criteria) { Purge::Criteria.new(purge_config, rc) }
+
   before(:each) do
     user[:following] = 5.times.map { build(:user) }.map { |f| stringify_keys(f) }
     expect(rc).to receive(:is_following).at_most(10).times do |f|
@@ -19,7 +21,6 @@ RSpec.describe "Purge::Criteria" do
   end
 
   it "check_batch passes if all are mutuals" do
-    criteria = Purge::Criteria.new(purge_config, rc)
     followers = 5.times.map { user[:following].sample }
     expect(criteria.check_batch(followers)).to eq([true] * 5)
   end
@@ -29,7 +30,6 @@ RSpec.describe "Purge::Criteria" do
       [false] * batch.size
     end
 
-    criteria = Purge::Criteria.new(purge_config, rc)
     followers = 5.times.map { build(:user) }
     expect(criteria.check_batch(followers)).to eq([false] * 5)
   end
@@ -39,7 +39,6 @@ RSpec.describe "Purge::Criteria" do
       [false, false, true]
     end
 
-    criteria = Purge::Criteria.new(purge_config, rc)
     followers = [user[:following].sample, build(:user), build(:user), user[:following].sample, build(:user)]
     expect(criteria.check_batch(followers)).to eq([true, false, false, true, true])
   end

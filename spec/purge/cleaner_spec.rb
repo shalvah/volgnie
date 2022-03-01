@@ -29,7 +29,7 @@ RSpec.describe "Purge::Cleaner" do
 
   before do
     Mail::TestMailer.deliveries.clear
-    mock_redis.lpush("purged-followers-#{user[:id]}", purged_followers.map(&:to_json))
+    mock_redis.sadd("purged-followers-#{user[:id]}", purged_followers.map(&:to_json))
 
     cleaner = Purge::Cleaner.new(payload["user"], payload["purge_config"], mock_redis, Aws::CloudWatch::Client.new)
     cleaner.clean
@@ -40,6 +40,6 @@ RSpec.describe "Purge::Cleaner" do
     expect(Mail::TestMailer.deliveries).to include(an_object_satisfying do |mail|
       AppConfig[:mail][:from].end_with?("<#{mail.from[0]}>") && mail.to == [payload["purge_config"]["report_email"]]
     end)
-    expect(mock_redis.lrange("purged-followers-#{user[:id]}", 0, -1)).to be_empty
+    expect(mock_redis.smembers("purged-followers-#{user[:id]}")).to be_empty
   end
 end

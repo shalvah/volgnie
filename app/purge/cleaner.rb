@@ -16,7 +16,7 @@ module Purge
       @purge_config = PurgeConfig.from(purge_config)
       @cache = cache
       @cloudwatch_client = cloudwatch_client
-      @purged_followers = cache.lrange("purged-followers-#{user["id"]}", 0, -1).map { |v| JSON.parse(v) }
+      @purged_followers = cache.smembers("purged-followers-#{user["id"]}").map { |v| JSON.parse(v) }
     end
 
     def clean
@@ -41,7 +41,7 @@ module Purge
     end
 
     def record
-      return if @purge_config.__simulate || (ENV["CLOUDWATCH_METRICS"] === "off")
+      return if @purge_config.__simulate || (ENV["CLOUDWATCH_METRICS"] == "off")
       return if @cache.get("clean-#{@user.id}-record")
 
       # todo track config

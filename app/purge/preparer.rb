@@ -21,7 +21,7 @@ module Purge
     end
 
     def save_following
-      return if @cache.exists("following-#{@user.id}") === 1
+      return if @cache.exists("following-#{@user.id}") == 1
 
       following = @t.get_following(@user.id, all: true)
       @cache.set("following-#{@user.id}", following.to_json, ex: TWO_DAYS)
