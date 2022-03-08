@@ -45,13 +45,13 @@ module Purge
         checkExistenceOnly: true
       }
 
-      Honeybadger.context({ searchQuery: payload.queries })
+      Honeybadger.context({ searchQuery: queries })
 
       req = RestClient::Request.new(
         method: "post",
         url: ENV["ZEARCH_ENDPOINT"],
         headers: { authorization: ENV["ZEARCH_KEY"], content_type: :json },
-        body: payload,
+        payload: payload.to_json,
         timeout: 30
       )
       response = req.execute

@@ -34,10 +34,10 @@ module Purge
           purged_followers: @purged_followers,
           user: @user,
           level: @purge_config.level,
-          purge_trigger_time: Time.new(@purge_config.trigger_time).strftime("%B %-d, %Y at %H:%M:%S UTC%z")
+          purge_trigger_time: Time.at(@purge_config.trigger_time).strftime("%B %-d, %Y at %H:%M:%S UTC%z")
         })
         .send!
-      @cache.set("clean-#{@user.id}-report", 1, ex: 24 * 60 * 60)
+      @cache.set("clean-#{@user.id}-report", 1, ex: 2 * 60 * 60)
     end
 
     def record
@@ -66,7 +66,7 @@ module Purge
         namespace: 'Volgnie'
       }
       @cloudwatch_client.put_metric_data(payload)
-      @cache.set("clean-#{@user.id}-record", 1, ex: 24 * 60 * 60)
+      @cache.set("clean-#{@user.id}-record", 1, ex: 2 * 60 * 60)
     end
   end
 

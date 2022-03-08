@@ -38,17 +38,24 @@ class TwitterApi
   end
 
   def raw_request(method, endpoint, params = {}, body: {})
+    Honeybadger.add_breadcrumb("Twitter API", metadata: {
+      endpoint: endpoint,
+      params: params,
+      method: method,
+    }, category: "request") unless ENV["APP_ENV"] == "test"
+
     uri = @base_url + endpoint
     req = RestClient::Request.new(
       method: method,
       url: uri,
       headers: { params: params, content_type: :json },
-      body: body,
+      payload: body,
       timeout: 30
     )
     req = with_user_auth(req, uri)
     response = req.execute
 
+    span.finish
     JSON.parse(response.body)
   end
 

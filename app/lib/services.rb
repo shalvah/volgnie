@@ -15,11 +15,6 @@ class Services
       }[ENV.fetch("APP_ENV")].new
     },
 
-    lambda_client: lambda {
-      (ENV["IS_OFFLINE"] || ENV["IS_LOCAL"]) ? Aws::Lambda::Client.new({ endpoint: 'http://localhost:3002' })
-        : Aws::Lambda::Client.new
-    },
-
     relationship_checker: lambda { Purge::RelationshipChecker },
   }
 

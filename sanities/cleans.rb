@@ -8,7 +8,7 @@ purge_config = {
   "report_email" => "hello@shalvah.me",
   "level" => 2,
   "__simulate" => false,
-  "trigger_time" => Time.now.-(60 * 60 * 3)
+  "trigger_time" => Time.now.-(60 * 60 * 3).to_i
 }
 purged_followers = rand(0..5).times.map do
   {
@@ -17,7 +17,10 @@ purged_followers = rand(0..5).times.map do
   }
 end
 
+# Prep
 Services[:cache].sadd("purged-followers-#{user["id"]}", purged_followers.map(&:to_json)) if purged_followers.size > 0
+Services[:cache].del("clean-#{user["id"]}-report")
+Services[:cache].del("clean-#{user["id"]}-record")
 
 puts "Purged followers: #{purged_followers.size}"
 
@@ -30,11 +33,15 @@ begin
   sleep 2
   raise StandardError.new("purged followers not deleted") if pf.size > 0
 ensure
-  Services[:cache].del("purged-followers-#{user["id"]}", 0, -1)
+  Services[:cache].del("purged-followers-#{user["id"]}")
 end
 
-# Assertions (check manually)
-# 1. Received "Purge complete" email from "purged@volgnie.com" at "hello@shalvah.me"
-# 2. Email removed {purged_followers.size} followers
-# 3. User should have 7000 - {purged_followers.size} followers
-# 4. There should be a new CloudWatch metric
+puts <<TEXT
+
+Seems good; verify assertions manually:
+
+1. Received "Purge complete" email from "purged@volgnie.com" at "hello@shalvah.me"
+2. Email removed #{pf.size} followers
+3. User should have #{7000 - pf.size} followers
+4. There should be a new CloudWatch metric
+TEXT
