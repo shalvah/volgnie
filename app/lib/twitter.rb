@@ -37,36 +37,45 @@ class TwitterApi
     req
   end
 
-  def raw_request(method, endpoint, params = {}, body: {})
-    Honeybadger.add_breadcrumb("Twitter API", metadata: {
+  def raw_request(name, method, endpoint, params = {}, body: {})
+    Honeybadger.add_breadcrumb("Twitter API: #{name}", metadata: {
       endpoint: endpoint,
       params: params,
       method: method,
     }, category: "request")
 
     uri = @base_url + endpoint
-    req = RestClient::Request.new(
-      method: method,
-      url: uri,
-      headers: { params: params, content_type: :json },
-      payload: body,
-      timeout: 30
-    )
-    req = with_user_auth(req, uri)
-    response = req.execute
+
+
+    tracer = OpenTelemetry.tracer_provider.tracer('custom')
+    response = tracer.in_span(
+      "Twitter API: #{name}",
+      attributes: {"endpoint" => endpoint},
+      kind: :client
+    ) do
+      req = RestClient::Request.new(
+        method: method,
+        url: uri,
+        headers: { params: params, content_type: :json },
+        payload: body,
+        timeout: 30
+      )
+      req = with_user_auth(req, uri)
+      req.execute
+    end
 
     JSON.parse(response.body)
   end
 
-  def request(method, endpoint, params = {}, body: {}, options: {}, &block)
-    body = raw_request(method, endpoint, params, body: body)
+  def request(name, method, endpoint, params = {}, body: {}, options: {}, &block)
+    body = raw_request(name, method, endpoint, params, body: body)
     data = body["data"]
 
     if options[:all]
       pagination_token = body["meta"]["next_token"]
       while pagination_token
         params["pagination_token"] = pagination_token
-        body = raw_request(method, endpoint, params, body: body)
+        body = raw_request(name, method, endpoint, params, body: body)
         data += body["data"]
         pagination_token = body["meta"]["next_token"]
       end
@@ -78,7 +87,7 @@ class TwitterApi
         pagination_token = body["meta"]["next_token"]
         while pagination_token
           params["pagination_token"] = pagination_token
-          body = raw_request(method, endpoint, params, body: body)
+          body = raw_request(name, method, endpoint, params, body: body)
           block.call(body["data"], body["meta"])
           pagination_token = body["meta"]["next_token"]
         end
@@ -92,31 +101,31 @@ class TwitterApi
   def get_user(id)
     endpoint = "/users/#{id}"
     query_params = { "user.fields" => "id,name,profile_image_url,protected,public_metrics,username" }
-    TwitterUser.new(**request(:get, endpoint, query_params))
+    TwitterUser.new(**request(:get_user, :get, endpoint, query_params))
   end
 
   def get_following(id, options = {}, &block)
     endpoint = "/users/#{id}/following"
     query_params = { max_results: 1000 }
-    request(:get, endpoint, query_params, options: options, &block)
+    request(:get_following, :get, endpoint, query_params, options: options, &block)
   end
 
   def get_followers(id, options = {}, &block)
     endpoint = "/users/#{id}/followers"
     query_params = { max_results: 1000 }
-    request(:get, endpoint, query_params, options: options, &block)
+    request(:get_followers, :get, endpoint, query_params, options: options, &block)
   end
 
   def block(source_user_id, target_user_id)
     endpoint = "/users/#{source_user_id}/blocking"
-    request(:post, endpoint, body: {
+    request(:block, :post, endpoint, body: {
       target_user_id: target_user_id
     })
   end
 
   def unblock(source_user_id, target_user_id)
     endpoint = "/users/#{source_user_id}/blocking/#{target_user_id}"
-    request(:delete, endpoint)
+    request(:unblock, :delete, endpoint)
   end
 end
 

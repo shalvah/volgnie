@@ -1,8 +1,13 @@
 # frozen_string_literal: true
 
-ENV["OTEL_LOG_LEVEL"] = ENV["APP_ENV"] == "development" ? "debug" : "info"
+ENV["OTEL_LOG_LEVEL"] = case ENV["APP_ENV"]
+  when "development"; "debug"
+  when "test"; "fatal"
+  else "info"
+end
 
 instrumentation_enabled = ENV["APP_ENV"] != "test"
+in_web_context = defined?(Sinatra)
 
 if instrumentation_enabled
   # We'll manually force send after each request
@@ -38,21 +43,30 @@ OpenTelemetry::SDK.configure do |c|
     c.add_span_processor(processor)
     OTelProcessor = processor
 
-    c.use 'OpenTelemetry::Instrumentation::Sinatra'
+    c.use('OpenTelemetry::Instrumentation::Sinatra') if in_web_context
     c.use 'OpenTelemetry::Instrumentation::RestClient'
     c.use 'OpenTelemetry::Instrumentation::Redis', { db_statement: :include }
     c.use 'OpenTelemetry::Instrumentation::AwsSdk'
   end
 end
 
-def set_context_data(context, user)
-  return if ENV["APP_ENV"] == "test"
+def flush_traces
+  defined?(OTelProcessor) && OTelProcessor.shutdown(timeout: 10)
+end
 
+def lambda_transaction(context, payload = nil)
   Honeybadger.context({ aws_request_id: context.aws_request_id })
 
-  current_span = OpenTelemetry::SDK.current_span
-  current_span.set_attribute({
-    "request_id" => context.aws_request_id,
-    "user.id" => user["id"]
-  })
+  tracer = OpenTelemetry.tracer_provider.tracer('custom')
+  tracer.in_span(
+    context.function_name,
+    attributes: {
+      'request.id' => context.aws_request_id,
+    },
+    kind: :server
+  ) do |span, span_context|
+    span.set_attribute('user.id', payload["user"]["id"]) if payload
+
+    yield span, span_context
+  end
 end

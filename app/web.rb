@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-at_exit { defined?(OTelProcessor) && OTelProcessor.shutdown(timeout: 10) }
+at_exit { flush_traces }
 
 require 'sinatra'
 require_relative './bootstrap'

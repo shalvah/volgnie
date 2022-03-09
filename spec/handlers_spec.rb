@@ -27,7 +27,8 @@ RSpec.describe "handlers" do
       def dispatch(topic, payload)
         event = fake_sns_event(payload)
         context = Class.new do
-          define_method(:get_remaining_time_in_millis) { Float::INFINITY }
+          define_method(:aws_request_id) { "123" }
+          define_method(:function_name) { "123" }
         end.new
         send(EVENT_HANDLERS[topic], { event: event, context: context })
       end

@@ -45,16 +45,22 @@ module Purge
         checkExistenceOnly: true
       }
 
-      Honeybadger.context({ searchQuery: queries })
-
-      req = RestClient::Request.new(
-        method: "post",
-        url: ENV["ZEARCH_ENDPOINT"],
-        headers: { authorization: ENV["ZEARCH_KEY"], content_type: :json },
-        payload: payload.to_json,
-        timeout: 30
-      )
-      response = req.execute
+      Honeybadger.context({ searchQuery: queries.to_json })
+      tracer = OpenTelemetry.tracer_provider.tracer('custom')
+      response = tracer.in_span(
+        "Zearch API",
+        attributes: { "queries" => queries },
+        kind: :client
+      ) do
+        req = RestClient::Request.new(
+          method: "post",
+          url: ENV["ZEARCH_ENDPOINT"],
+          headers: { authorization: ENV["ZEARCH_KEY"], content_type: :json },
+          payload: payload.to_json,
+          timeout: 30
+        )
+        req.execute
+      end
 
       result = JSON.parse(response.body)
 
