@@ -42,7 +42,7 @@ class TwitterApi
       endpoint: endpoint,
       params: params,
       method: method,
-    }, category: "request") unless ENV["APP_ENV"] == "test"
+    }, category: "request")
 
     uri = @base_url + endpoint
     req = RestClient::Request.new(
@@ -55,7 +55,6 @@ class TwitterApi
     req = with_user_auth(req, uri)
     response = req.execute
 
-    span.finish
     JSON.parse(response.body)
   end
 

@@ -1,12 +1,16 @@
 require 'bundler/setup'
-require_relative './bootstrap'
+require_relative './app/bootstrap'
 require_relative './app/purge/purger'
 require_relative './app/purge/preparer'
 require_relative './app/purge/cleaner'
 
+at_exit { defined?(OTelProcessor) && OTelProcessor.shutdown(timeout: 10) }
+
 # Idempotent. If this function fails midway, simply retry.
 def start_purge(event:, context:)
   payload = get_sns_payload event
+  set_context_data(context, payload["user"])
+
   preparer = Purge::Preparer.build(payload["user"])
   preparer.save_following
   followers = preparer.fetch_followers
@@ -16,8 +20,10 @@ end
 # Idempotent. If this function fails midway, simply retry.
 def purge_followers(event:, context:)
   payload = get_sns_payload event
-  purger = Purge::Purger.build(payload["user"], payload["purge_config"]) { context.get_remaining_time_in_millis }
-  purger.purge(payload["followers"])
+  set_context_data(context, payload["user"])
+
+  purger = Purge::Purger.build(payload["user"], payload["purge_config"])
+  purger.purge_next_batch(payload["followers"])
 
   Events.purge_finish(payload["user"], payload["purge_config"])
 end
@@ -25,6 +31,7 @@ end
 # Idempotent. If this function fails midway, simply retry.
 def finish_purge(event:, context:)
   payload = get_sns_payload event
+  set_context_data(context, payload["user"])
 
   cleaner = Purge::Cleaner.build(payload["user"], payload["purge_config"])
   cleaner.clean

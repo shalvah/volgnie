@@ -35,35 +35,27 @@ Services[:cache].set("keys-#{user["id"]}", { token: "tokennn", secret: "secrettt
 
 purger = Purge::Purger.build(user, purge_config)
 
+runs = 1
 begin
-  puts "Purging first batch"
+  puts "\nRun ##{runs}"
   purger.purge_next_batch(followers)
+
+  if runs < 2
+    fail "DoneWithBatch not raised"
+  end
+
+  puts "Finished safely, as expected"
+  assert(Services[:cache].get("purge-#{user["id"]}-batches-processed").to_i, 2)
 rescue Purge::DoneWithBatch
   puts "Caught DoneWithBatch error as expected"
   pf = Services[:cache].smembers("purged-followers-#{user["id"]}")
   puts "Purged followers: #{pf.size}"
-  assert(Services[:cache].get("purge-#{user["id"]}-batches-processed").to_i, 1)
-  assert(pf.size, 9)
+  assert(Services[:cache].get("purge-#{user["id"]}-batches-processed").to_i, runs)
+  assert(pf.size, runs == 1 ? 9 : followers.size - 2)
 
-  begin
-    puts "\nPurging second batch"
-    purger.purge_next_batch(followers)
-  rescue Purge::DoneWithBatch
-    puts "Caught DoneWithBatch error as expected"
-    pf = Services[:cache].smembers("purged-followers-#{user["id"]}")
-    puts "Purged followers: #{pf.size}"
-    assert(Services[:cache].get("purge-#{user["id"]}-batches-processed").to_i, 2)
-    assert(pf.size, followers.size - 10 - 1 + 9)
-
-    puts "\nPurging final try"
-    purger.purge_next_batch(followers)
-    puts "Finished safely, as expected"
-    assert(Services[:cache].get("purge-#{user["id"]}-batches-processed").to_i, 2)
-    return
-  end
+  runs += 1
+  retry
 ensure
   Services[:cache].del("purged-followers-#{user["id"]}")
   Services[:cache].del("purge-#{user["id"]}-batches-processed")
 end
-
-fail "DoneWithBatch not raised"

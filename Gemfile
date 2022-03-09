@@ -10,7 +10,6 @@ gem "omniauth-twitter", "~> 1.4"
 gem "aws-sdk-cloudwatch", "~> 1.59"
 gem "aws-sdk-lambda", "~> 1.76"
 gem "aws-sdk-sns", "~> 1.48"
-gem "honeybadger", "~> 4.9"
 
 gem "rest-client", "~> 2.1"
 gem "oauth", "~> 0.5.8"
@@ -40,3 +39,13 @@ gem "base64"
 gem "date"
 gem "erb"
 gem "json"
+
+# Error handling and instrumentation
+gem "honeybadger", "~> 4.9"
+gem "opentelemetry-sdk", "~> 1.0"
+gem "opentelemetry-exporter-otlp", "~> 0.21.2"
+gem "opentelemetry-instrumentation-restclient", "~> 0.19.3"
+gem "opentelemetry-instrumentation-sinatra", "~> 0.19.3"
+gem "opentelemetry-instrumentation-redis", "~> 0.21.3"
+gem "opentelemetry-instrumentation-aws_sdk", "~> 0.2.2"
+

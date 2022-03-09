@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+at_exit { defined?(OTelProcessor) && OTelProcessor.shutdown(timeout: 10) }
+
 require 'sinatra'
 require_relative './bootstrap'
 require 'omniauth'
@@ -25,9 +27,8 @@ unless test?
   before do
     if session[:user]
       current_span = OpenTelemetry::Trace.current_span
-      current_span.set_attribute({
-        "user" => session[:user].to_json
-      })
+      current_span.set_attribute("user", session[:user].to_json)
+      current_span.set_attribute("user.id", session[:user][:id])
     end
   end
 end
@@ -83,9 +84,9 @@ end
     })
 
     # Don't let them fire purge multiple times
-    # if Services[:cache].set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: AppConfig[:purge_lock_duration])
-    Events.purge_start(AppUser.from(current_user), purge_config)
-    # end
+    if Services[:cache].set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: AppConfig[:purge_lock_duration])
+      Events.purge_start(AppUser.from(current_user), purge_config)
+    end
 
     erb :started, locals: { email: params[:email] }
   end
@@ -96,7 +97,3 @@ end
 
     "Something went wrong, but we're looking into it! Please try again in a bit."
   end
-
-at_exit do
-  OTelProcessor.force_flush
-end
