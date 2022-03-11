@@ -84,9 +84,9 @@ end
     })
 
     # Don't let them fire purge multiple times
-    if Services[:cache].set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: AppConfig[:purge_lock_duration])
+    # if Services[:cache].set("purge-config-#{current_user["id"]}", purge_config.to_json, nx: true, ex: AppConfig[:purge_lock_duration])
       Events.purge_start(AppUser.from(current_user), purge_config)
-    end
+    # end
 
     erb :started, locals: { email: params[:email] }
   end

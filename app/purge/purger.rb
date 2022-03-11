@@ -52,8 +52,8 @@ module Purge
 
     def remove_follower(follower)
       unless @simulating
-        @t.block(@user, follower) # Intentionally synchronous calls to prolong rate limits
-        @t.unblock(@user, follower)
+        @t.block(@user.id, follower["id"]) # Intentionally synchronous calls to prolong rate limits
+        @t.unblock(@user.id, follower["id"])
       end
 
       # If we're interrupted mid-batch, we might process some users twice, so we use a set

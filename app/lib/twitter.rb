@@ -4,6 +4,21 @@ require "rest-client"
 require "oauth"
 require "oauth/request_proxy/rest_client_request"
 
+class OAuth::RequestProxy::RestClient::Request
+  # TODO PR this patch
+  # Post params should only be included in the signature for form-data
+  # But Rest-Client requires you to encode JSON as string, so it's impossible to know
+  def post_parameters
+    # Post params are only used if posting form data
+    is_form_data = request.payload && request.payload.headers['Content-Type'] == 'application/x-www-form-urlencoded'
+    if is_form_data && (method == "POST" || method == "PUT")
+      OAuth::Helper.stringify_keys(query_string_to_hash(request.payload.to_s) || {})
+    else
+      {}
+    end
+  end
+end
+
 class TwitterApi
   DEFAULT_TIMEOUT = 20
   attr_accessor :access_token
@@ -46,56 +61,67 @@ class TwitterApi
 
     uri = @base_url + endpoint
 
-
-    tracer = OpenTelemetry.tracer_provider.tracer('custom')
-    response = tracer.in_span(
-      "Twitter API: #{name}",
-      attributes: {"endpoint" => endpoint},
-      kind: :client
-    ) do
+    if body.empty?
       req = RestClient::Request.new(
-        method: method,
-        url: uri,
-        headers: { params: params, content_type: :json },
-        payload: body,
+        method: method, url: uri,
+        headers: { params: params },
         timeout: 30
       )
-      req = with_user_auth(req, uri)
-      req.execute
+    else
+      req = RestClient::Request.new(
+        method: method, url: uri,
+        headers: { params: params, content_type: :json },
+        payload: body.to_json,
+        timeout: 30
+      )
     end
+    req = with_user_auth(req, uri)
+    response = req.execute
 
     JSON.parse(response.body)
+  rescue RestClient::Exception => e
+    current_span = OpenTelemetry::Trace.current_span
+    current_span.set_attribute("http.response_body", e.http_body)
+    Honeybadger.context({"http.response_body": e.http_body })
+    raise
   end
 
-  def request(name, method, endpoint, params = {}, body: {}, options: {}, &block)
-    body = raw_request(name, method, endpoint, params, body: body)
-    data = body["data"]
+  def request(name, method, endpoint, query_params = {}, body: {}, options: {}, &block)
+    tracer = OpenTelemetry.tracer_provider.tracer('custom')
+    tracer.in_span(
+      "Twitter API: #{name}", kind: :client,
+      attributes: { "http.endpoint" => endpoint, "http.options" => options.to_json },
+    ) do
 
-    if options[:all]
-      pagination_token = body["meta"]["next_token"]
-      while pagination_token
-        params["pagination_token"] = pagination_token
-        body = raw_request(name, method, endpoint, params, body: body)
-        data += body["data"]
-        pagination_token = body["meta"]["next_token"]
-      end
-    end
+      response = raw_request(name, method, endpoint, query_params, body: body)
+      data = response["data"]
 
-    if options[:chunked]
-      catch(:stop_chunks) do
-        block.call(data, body["meta"])
-        pagination_token = body["meta"]["next_token"]
+      if options[:all]
+        pagination_token = response["meta"]["next_token"]
         while pagination_token
-          params["pagination_token"] = pagination_token
-          body = raw_request(name, method, endpoint, params, body: body)
-          block.call(body["data"], body["meta"])
-          pagination_token = body["meta"]["next_token"]
+          query_params["pagination_token"] = pagination_token
+          response = raw_request(name, method, endpoint, query_params, body: body)
+          data += response["data"]
+          pagination_token = response["meta"]["next_token"]
         end
       end
-      return
-    end
 
-    data
+      if options[:chunked]
+        catch(:stop_chunks) do
+          block.call(data, response["meta"])
+          pagination_token = response["meta"]["next_token"]
+          while pagination_token
+            query_params["pagination_token"] = pagination_token
+            response = raw_request(name, method, endpoint, query_params, body: body)
+            block.call(response["data"], response["meta"])
+            pagination_token = response["meta"]["next_token"]
+          end
+        end
+        return
+      end
+
+      data
+    end
   end
 
   def get_user(id)
@@ -121,11 +147,19 @@ class TwitterApi
     request(:block, :post, endpoint, body: {
       target_user_id: target_user_id
     })
+  rescue RestClient::BadRequest => e
+    response = JSON.parse(e.http_body)
+    return true if response["errors"][0]["message"] == "You cannot block an account that is not active."
+    raise
   end
 
   def unblock(source_user_id, target_user_id)
     endpoint = "/users/#{source_user_id}/blocking/#{target_user_id}"
     request(:unblock, :delete, endpoint)
+  rescue RestClient::BadRequest => e
+    response = JSON.parse(e.http_body)
+    return true if response["errors"][0]["message"] == "You cannot unblock an account that is not active."
+    raise
   end
 end
 
