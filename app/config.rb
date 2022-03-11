@@ -54,5 +54,5 @@ end
 
 
 module Purge
-  DEFAULT_FOLLOWER_LIMIT = 4_000
+  DEFAULT_FOLLOWER_LIMIT = 1_000
 end
