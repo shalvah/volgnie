@@ -52,3 +52,17 @@ def sanities(event:, context:)
     require_relative "./sanities/#{event}"
   end
 end
+
+def retry(event:, context:)
+  original_event = event["original"] || JSON.parse(File.read("tmp/event_data.json"))
+  raise "Couldn't find any event data" if !original_event
+
+  lambda_client = (ENV["IS_OFFLINE"] || ENV["IS_LOCAL"]) ?
+    Aws::Lambda::Client.new({ endpoint: 'http://localhost:3002' })
+    : Aws::Lambda::Client.new
+  lambda_client.invoke({
+    function_name: "volgnie-dev-purge_followers",
+    invocation_type: "RequestResponse",
+    payload: original_event,
+  })
+end

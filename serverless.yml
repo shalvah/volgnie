@@ -35,6 +35,9 @@ provider:
     - Effect: Allow
       Action: [ "cloudwatch:PutMetricData" ]
       Resource: [ "*" ]
+    - Effect: Allow
+      Action: [ "lambda:InvokeFunction" ]
+      Resource: [ "*" ]
   environment: ${file(./environment.yml)}
 
 package:
@@ -73,7 +76,7 @@ functions:
 
   purge_followers:
     handler: handler.purge_followers
-    timeout: 120
+    timeout: 50
     maximumRetryAttempts: 0 # We need a larger retry interval
     events:
       - sns: purge_ready
@@ -84,5 +87,13 @@ functions:
     events:
       - sns: purge_finish
 
+  # For testing a specific piece of functionality.
+  # Invoke the function directly, passing in the name of the sanity (in sanities/) folder as the event data
   sanities:
     handler: handler.sanities
+
+  # For local/manual retry of the purge_followers function
+  retry:
+    handler: handler.retry
+    timeout: 50
+    maximumRetryAttempts: 0
