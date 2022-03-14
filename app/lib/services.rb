@@ -16,6 +16,15 @@ class Services
     },
 
     relationship_checker: lambda { Purge::RelationshipChecker },
+
+    logger: lambda {
+      l = Logger.new($stdout)
+      l.formatter = proc do |severity, datetime, progname, msg|
+        # AWS CloudWatch includes timestamps already
+        env_is?("production") ? "#{severity}: #{msg}\n" : "[#{datetime}] #{severity}: #{msg}\n"
+      end
+      l
+    }
   }
 
   class << self
@@ -40,4 +49,8 @@ class Services
       @@__resolved = {}
     end
   end
+end
+
+def logger
+  Services[:logger]
 end

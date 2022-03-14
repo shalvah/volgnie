@@ -2,6 +2,8 @@ require_relative '../handler'
 require_relative '../app/purge/preparer'
 require_relative '../app/purge/criteria'
 
+Services[:logger] = Logger.new(File::NULL)
+
 RSpec.describe "handlers" do
   user = nil
   AppConfig[:default_follower_limit] = 20 # Only check the first 20 followers

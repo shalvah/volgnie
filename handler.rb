@@ -41,7 +41,7 @@ end
 def push_next_batch(event:, context:)
   lambda_transaction(context) do
 
-    p "Checking for batches to dispatch..."
+    logger.info "Checking for batches to dispatch..."
     times = []
     time_end = Time.now
     time = time_end - (AppConfig[:resume_batch_in_seconds] + 60)
@@ -60,7 +60,7 @@ def push_next_batch(event:, context:)
     end
 
     env_is_not?("test") && (keys.map { |k| Services[:cache].del(k) })
-    p "Dispatched #{payloads.size} batches"
+    logger.info "Dispatched #{payloads.size} batches"
     payloads.size
   end
 end
