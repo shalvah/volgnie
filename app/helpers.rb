@@ -23,3 +23,11 @@ def get_twitter_client(twitter, user_id, cache = Services[:cache])
   creds = get_user_creds(user_id, cache)
   twitter.as_user(creds["token"], creds["secret"])
 end
+
+def env_is?(env)
+  ENV["APP_ENV"] == env
+end
+
+def env_is_not?(env)
+  !env_is?(env)
+end

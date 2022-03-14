@@ -28,10 +28,40 @@ def purge_followers(event:, context:)
 
     Events.purge_finish(payload["user"], payload["purge_config"])
   rescue Purge::DoneWithBatch
-    # Don't count this as a failure
     span.set_attribute("purge.break", 1)
-    span.finish
-    raise
+
+    # Serialize payload so we can resume
+    time_to_resume = Time.now + AppConfig[:resume_batch_in_seconds] # Next batch in 5 minutes
+    key = "purge-resume-#{time_to_resume.getutc.strftime("%Y%m%d%H%M")}"
+    Services[:cache].sadd(key, payload.to_json)
+  end
+end
+
+# Checks if there's a next batch of purges due, and triggers them
+def push_next_batch(event:, context:)
+  lambda_transaction(context) do
+
+    p "Checking for batches to dispatch..."
+    times = []
+    time_end = Time.now
+    time = time_end - (AppConfig[:resume_batch_in_seconds] + 60)
+    times << (time += 60) while time < time_end
+    keys = times.map { |t| "purge-resume-#{t.getutc.strftime("%Y%m%d%H%M")}" }
+
+    payloads = Services[:cache].pipelined do |c|
+      keys.map { |k| c.smembers(k) }
+    end.flatten
+    # In test, we delete before we dispatch (since we dispatch synchronously)
+    env_is?("test") && Services[:cache].pipelined { |c| keys.map { |k| c.del(k) } }
+
+    payloads.each do |payload|
+      payload = JSON.parse(payload)
+      Events.purge_ready(payload["followers"], payload["user"], payload["purge_config"])
+    end
+
+    env_is_not?("test") && (keys.map { |k| Services[:cache].del(k) })
+    p "Dispatched #{payloads.size} batches"
+    payloads.size
   end
 end
 
@@ -62,7 +92,7 @@ def retry(event:, context:)
     : Aws::Lambda::Client.new
   lambda_client.invoke({
     function_name: "volgnie-dev-purge_followers",
-    invocation_type: "RequestResponse",
+    invocation_type: "Event",
     payload: original_event,
   })
 end

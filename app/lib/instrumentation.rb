@@ -6,7 +6,7 @@ ENV["OTEL_LOG_LEVEL"] = case ENV["APP_ENV"]
   else "info"
 end
 
-instrumentation_enabled = ENV["APP_ENV"] != "test"
+instrumentation_enabled = env_is_not?("test")
 in_web_context = defined?(Sinatra)
 
 if instrumentation_enabled
@@ -46,7 +46,7 @@ OpenTelemetry::SDK.configure do |c|
     c.use('OpenTelemetry::Instrumentation::Sinatra') if in_web_context
     c.use 'OpenTelemetry::Instrumentation::RestClient'
     # c.use 'OpenTelemetry::Instrumentation::Redis', { db_statement: :include }
-    c.use 'OpenTelemetry::Instrumentation::AwsSdk'
+    # c.use 'OpenTelemetry::Instrumentation::AwsSdk'
   end
 end
 

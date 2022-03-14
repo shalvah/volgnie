@@ -7,12 +7,12 @@ module Purge
   # - fetches the user's followers (up to the specified limit) and returns, along with the user and purge config
   class Preparer
 
-    def self.build(user, follower_limit = ::Purge::DEFAULT_FOLLOWER_LIMIT)
+    def self.build(user, follower_limit = ::AppConfig[:default_follower_limit])
       new(user, Services[:twitter], Services[:cache], follower_limit)
     end
 
 
-    def initialize(user, twitter, cache, follower_limit = ::Purge::DEFAULT_FOLLOWER_LIMIT)
+    def initialize(user, twitter, cache, follower_limit = ::AppConfig[:default_follower_limit])
       @cache = cache
       @follower_limit = follower_limit
 
@@ -23,7 +23,7 @@ module Purge
     def save_following
       return if @cache.exists("following-#{@user.id}") == 1
 
-      following = @t.get_following(@user.id, Purge::DEFAULT_FOLLOWER_LIMIT === 1000 ? {} : {all: true})
+      following = @t.get_following(@user.id, AppConfig[:default_follower_limit] === 1000 ? {} : {all: true})
       @cache.set("following-#{@user.id}", following.to_json, ex: TWO_DAYS)
     end
 

@@ -81,6 +81,14 @@ functions:
     events:
       - sns: purge_ready
 
+  # Push any scheduled batches for purging
+  push_next_batch:
+    handler: handler.push_next_batch
+    events:
+      - schedule: rate(5 minutes)
+    timeout: 20
+    maximumRetryAttempts: 0
+
   finish_purge:
     handler: handler.finish_purge
     timeout: 20

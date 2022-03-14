@@ -4,9 +4,10 @@ require_relative '../app/purge/criteria'
 
 RSpec.describe "handlers" do
   user = nil
-  Purge::DEFAULT_FOLLOWER_LIMIT = 20 # Only check the first 20 followers
+  AppConfig[:default_follower_limit] = 20 # Only check the first 20 followers
 
   before(:all) do
+    AppConfig[:resume_batch_in_seconds] = 0
     # Set up a fake user and followers that we'll run our test on.
     # We'll also dispatch all events synchronously and mock the Twitter API
     # This user has 20 followers, 6 of which they are also following
@@ -41,7 +42,7 @@ RSpec.describe "handlers" do
 
       def get_followers(id, options = {}, &block)
         catch(:stop_chunks) do
-          User[:followers].each_slice(Purge::DEFAULT_FOLLOWER_LIMIT) { |s| block.call(s, {}) }
+          User[:followers].each_slice(AppConfig[:default_follower_limit]) { |s| block.call(s, {}) }
         end
       end
 
@@ -159,6 +160,12 @@ end
 
 def purge(payload)
   Events.purge_start(payload["user"], payload["purge_config"])
-rescue Purge::DoneWithBatch
-  retry
+  context = Class.new do
+    define_method(:aws_request_id) { "123" }
+    define_method(:function_name) { "123" }
+  end.new
+  dispatched = nil
+  until dispatched == 0
+    dispatched = push_next_batch(event: nil, context: context)
+  end
 end

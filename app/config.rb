@@ -27,7 +27,9 @@ class AppConfig
   }
 
   Configs = {
-    purge_lock_duration: 2 * 24 * 60 * 60,
+    purge_lock_duration: 12 * 60 * 60, # Can't trigger a purge until 12 hours after the last trigger
+    default_follower_limit: 1_000,
+    resume_batch_in_seconds: 300,
     admins: [
       "theshalvah"
     ],
@@ -36,23 +38,18 @@ class AppConfig
     }),
   }
 
-  def self.get(key)
-    raise StandardError.new("Unknown config key #{key}") unless Configs.has_key?(key)
-    Configs[key]
-  end
-
   class << self
-    # So we can do AppConfig[:mail]
+    def get(key)
+      raise StandardError.new("Unknown config key #{key}") unless Configs.has_key?(key)
+      Configs[key]
+    end
+
+    def set(key, value)
+      raise StandardError.new("Unknown config key #{key}") unless Configs.has_key?(key)
+      Configs[key] = value
+    end
+
     alias_method :[], :get
+    alias_method :[]=, :set
   end
-
-  def self.set(key, value)
-    raise StandardError.new("Unknown config key #{key}") unless Configs.has_key?(key)
-    Configs[key] = value
-  end
-end
-
-
-module Purge
-  DEFAULT_FOLLOWER_LIMIT = 1_000
 end
