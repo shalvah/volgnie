@@ -17,7 +17,7 @@ RSpec.describe "Purge::Preparer" do
   end
 
   it "fetches followers" do
-    expect(mock_twitter).to receive(:get_followers) do |id, options = {}, &block|
+    expect(mock_twitter).to receive(:get_followers) do |id, limit, options = {}, &block|
       catch(:stop_chunks) { user[:followers].each_slice(3) { |chunk| block.call(chunk, {}) } }
     end
 

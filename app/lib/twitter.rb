@@ -136,9 +136,9 @@ class TwitterApi
     request(:get_following, :get, endpoint, query_params, options: options, &block)
   end
 
-  def get_followers(id, options = {}, &block)
+  def get_followers(id, limit, options = {}, &block)
     endpoint = "/users/#{id}/followers"
-    query_params = { max_results: 1000 }
+    query_params = { max_results: [1000, limit].min }
     request(:get_followers, :get, endpoint, query_params, options: options, &block)
   end
 
