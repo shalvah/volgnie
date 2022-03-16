@@ -29,7 +29,7 @@ module Purge
 
     def fetch_followers
       followers = []
-      @t.get_followers(@user.id, @follower_limit, chunked: true) do |followers_set, meta|
+      @t.get_followers(@user.id, @follower_limit, {chunked: true}) do |followers_set, meta|
         followers += followers_set
         throw :stop_chunks if followers.size >= @follower_limit
       end
