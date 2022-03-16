@@ -19,7 +19,7 @@ OmniAuth.config.allowed_request_methods = [:post]
 use OmniAuth::Builder do
   provider :twitter, ENV.fetch('TWITTER_API_KEY'), ENV.fetch('TWITTER_API_KEY_SECRET'), {
     use_authorize: true,
-    callback_url: ENV.fetch('TWITTER_CALLBACK_URL'),
+    callback_url: ENV.fetch('BASE_URL') + "/auth/twitter/callback",
   }
 end
 

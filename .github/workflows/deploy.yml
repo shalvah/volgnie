@@ -22,17 +22,15 @@ jobs:
 
           TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
           TWITTER_API_KEY_SECRET: ${{ secrets.TWITTER_API_KEY_SECRET }}
-          TWITTER_CALLBACK_URL: ${{ secrets.TWITTER_CALLBACK_URL }}
 
           REDIS_HOSTNAME: ${{ secrets.REDIS_HOSTNAME }}
-          REDIS_PORT: ${{ secrets.REDIS_PORT }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           REDIS_DB: 10
 
           MAIL_DRIVER: sendgrid
           SENDGRID_HOST: ${{ secrets.SENDGRID_HOST }}
           SENDGRID_PORT: ${{ secrets.SENDGRID_PORT }}
-          SENDGRID_USERNAME: ${{ secrets.SENDGRID_USERNAME }}
+          SENDGRID_USERNAME: apikey
           SENDGRID_PASSWORD: ${{ secrets.SENDGRID_PASSWORD }}
 
           SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
