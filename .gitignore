@@ -2,6 +2,7 @@ node_modules/
 .idea/
 preferences.arc
 .env
+.env.dev
 .serverless-rack-temp
 vendor/bundle
 tmp/

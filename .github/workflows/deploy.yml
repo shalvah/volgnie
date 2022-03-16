@@ -14,27 +14,34 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v2
-      # - run: npx serverless deploy
-        # env:
-        #   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        #   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        #   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-        #   AWS_REGION:
-        #   TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
-        #   TWITTER_API_KEY_SECRET: ${{ secrets.TWITTER_API_KEY_SECRET }}
-        #   TWITTER_CALLBACK_URL: ${{ secrets.TWITTER_CALLBACK_URL }}
-        #   REDIS_HOSTNAME: ${{ secrets.REDIS_HOSTNAME }}
-        #   REDIS_PORT: ${{ secrets.REDIS_PORT }}
-        #   REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-        #   REDIS_DB: 10
-        #   SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-        #   APP_ENV: production
-        #   BASE_URL:
-        #   MAIL_DRIVER: sendgrid
-        #   SENDGRID_HOST: ${{ secrets.SENDGRID_HOST }}
-        #   SENDGRID_PORT: ${{ secrets.SENDGRID_PORT }}
-        #   SENDGRID_USERNAME: ${{ secrets.SENDGRID_USERNAME }}
-        #   SENDGRID_PASSWORD: ${{ secrets.SENDGRID_PASSWORD }}
-        #   CLOUDWATCH_METRICS: "on"
-        #   HONEYBADGER_API_KEY: ${{ secrets.HONEYBADGER_API_KEY }}
-        #   HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY }}
+      - run: npx serverless deploy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_KEY_SECRET: ${{ secrets.TWITTER_API_KEY_SECRET }}
+          TWITTER_CALLBACK_URL: ${{ secrets.TWITTER_CALLBACK_URL }}
+
+          REDIS_HOSTNAME: ${{ secrets.REDIS_HOSTNAME }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          REDIS_DB: 10
+
+          MAIL_DRIVER: sendgrid
+          SENDGRID_HOST: ${{ secrets.SENDGRID_HOST }}
+          SENDGRID_PORT: ${{ secrets.SENDGRID_PORT }}
+          SENDGRID_USERNAME: ${{ secrets.SENDGRID_USERNAME }}
+          SENDGRID_PASSWORD: ${{ secrets.SENDGRID_PASSWORD }}
+
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          APP_ENV: production
+          BASE_URL: "https://volgnie.com"
+
+          CLOUDWATCH_METRICS: "on"
+          HONEYBADGER_API_KEY: ${{ secrets.HONEYBADGER_API_KEY }}
+          NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
+
+          ZEARCH_ENDPOINT: ${{ secrets.ZEARCH_ENDPOINT }}
+          ZEARCH_KEY: ${{ secrets.ZEARCH_KEY }}

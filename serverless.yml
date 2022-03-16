@@ -17,7 +17,7 @@ provider:
   logRetentionInDays: 30
   lambdaHashingVersion: 20201221
   timeout: 30
-  region: us-west-1
+  region: eu-central-1
   versionFunctions: false
   httpApi:
     shouldStartNameWithService: true
