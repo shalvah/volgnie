@@ -3,7 +3,7 @@ service: volgnie
 #app: your-app-name
 #org: your-org-name
 
-frameworkVersion: '^2.66'
+frameworkVersion: '^3'
 useDotenv: true
 
 plugins:

@@ -1,13 +1,14 @@
 {
   "scripts": {
     "offline:build": "serverless rack install",
-    "offline": "serverless offline --noPrependStageInUrl --httpPort 9787",
-    "sanity": "serverless invoke local --function sanities -d",
-    "invoke": "serverless invoke local --function"
+    "offline": "cross-env AWS_PROFILE=volgnie serverless offline --noPrependStageInUrl --httpPort 9787",
+    "sanity": "cross-env AWS_PROFILE=volgnie serverless invoke local --function sanities -d",
+    "invoke": "cross-env AWS_PROFILE=volgnie serverless invoke local --function"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "dotenv": "^10.0.0",
-    "serverless": "^2.72.2",
+    "serverless": "^3.7.9",
     "serverless-offline": "github:shalvah/serverless-offline#fix-ruby-stderr-override-stdout",
     "serverless-rack": "github:shalvah/serverless-rack"
   }

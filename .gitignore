@@ -3,6 +3,7 @@ node_modules/
 preferences.arc
 .env
 .env.dev
+.env.prod
 .serverless-rack-temp
 vendor/bundle
 tmp/
