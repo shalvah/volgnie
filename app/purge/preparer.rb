@@ -24,7 +24,7 @@ module Purge
       return if @cache.exists("following-#{@user.id}") == 1
 
       following = @t.get_following(@user.id, {all: true})
-      @cache.set("following-#{@user.id}", following.to_json, ex: TWO_DAYS)
+      @cache.set("following-#{@user.id}", following.to_json, ex: AppConfig[:purge_lock_duration])
     end
 
     def fetch_followers

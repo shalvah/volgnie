@@ -18,7 +18,8 @@ if instrumentation_enabled
   ENV["OTEL_EXPORTER_OTLP_HEADERS"] = "api-key=#{ENV.fetch("NEW_RELIC_API_KEY")}"
   ENV["OTEL_EXPORTER_OTLP_TRACES_COMPRESSION"] = "none"
 
-  ENV["OTEL_TRACES_EXPORTER"] = "none" # Override this later on for non-test env
+  ENV["OTEL_TRACES_EXPORTER"] = "none" # We override this later in this file for non-test env
+  # COnfigure the TraceIdRatioBased with a prob of 1
   ENV["OTEL_TRACES_SAMPLER"] = "traceidratio"
   ENV["OTEL_TRACES_SAMPLER_ARG"] = "1"
   ENV["OTEL_RESOURCE_ATTRIBUTES"] = "SampleRate=1"
