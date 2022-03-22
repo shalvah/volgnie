@@ -39,30 +39,27 @@ end
 
 # Checks if there's a next batch of purges due, and triggers them
 def push_next_batch(event:, context:)
-  lambda_transaction(context) do
+  logger.info "Checking for batches to dispatch..."
+  times = []
+  time_end = Time.now
+  time = time_end - (AppConfig[:resume_batch_in_seconds] + 60)
+  times << (time += 60) while time < time_end
+  keys = times.map { |t| "purge-resume-#{t.getutc.strftime("%Y%m%d%H%M")}" }
 
-    logger.info "Checking for batches to dispatch..."
-    times = []
-    time_end = Time.now
-    time = time_end - (AppConfig[:resume_batch_in_seconds] + 60)
-    times << (time += 60) while time < time_end
-    keys = times.map { |t| "purge-resume-#{t.getutc.strftime("%Y%m%d%H%M")}" }
+  payloads = Services[:cache].pipelined do |c|
+    keys.map { |k| c.smembers(k) }
+  end.flatten
+  # In test, we delete before we dispatch (since we dispatch synchronously)
+  env_is?("test") && Services[:cache].pipelined { |c| keys.map { |k| c.del(k) } }
 
-    payloads = Services[:cache].pipelined do |c|
-      keys.map { |k| c.smembers(k) }
-    end.flatten
-    # In test, we delete before we dispatch (since we dispatch synchronously)
-    env_is?("test") && Services[:cache].pipelined { |c| keys.map { |k| c.del(k) } }
-
-    payloads.each do |payload|
-      payload = JSON.parse(payload)
-      Events.purge_ready(payload["followers"], payload["user"], payload["purge_config"])
-    end
-
-    env_is_not?("test") && (keys.map { |k| Services[:cache].del(k) })
-    logger.info "Dispatched #{payloads.size} batches"
-    payloads.size
+  payloads.each do |payload|
+    payload = JSON.parse(payload)
+    Events.purge_ready(payload["followers"], payload["user"], payload["purge_config"])
   end
+
+  env_is_not?("test") && (keys.map { |k| Services[:cache].del(k) })
+  logger.info "Dispatched #{payloads.size} batches"
+  payloads.size
 end
 
 # Idempotent. If this function fails midway, simply retry.
