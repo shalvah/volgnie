@@ -54,20 +54,5 @@ RSpec.describe "Web UI" do
       expected_event[:payload][:purge_config][:trigger_time] = Services[:dispatcher].dispatched[0][:payload][:purge_config].trigger_time
       expect(Services[:dispatcher].dispatched).to match_array([expected_event])
     end
-
-    it "will not fire purge_start event if already running" do
-      AppConfig.set(:purge_lock_duration, 1)
-
-      post "/purge/start?email=#{email}&level=2"
-      expected_event[:payload][:purge_config][:trigger_time] = Services[:dispatcher].dispatched[0][:payload][:purge_config].trigger_time
-      expect(Services[:dispatcher].dispatched).to match_array([expected_event])
-      post "/purge/start?email=#{email}&level=2"
-      expected_event[:payload][:purge_config][:trigger_time] = Services[:dispatcher].dispatched[0][:payload][:purge_config].trigger_time
-      expect(Services[:dispatcher].dispatched).to match_array([expected_event])
-      sleep 1
-      post "/purge/start?email=#{email}&level=2"
-      expected_event[:payload][:purge_config][:trigger_time] = Services[:dispatcher].dispatched[0][:payload][:purge_config].trigger_time =  Services[:dispatcher].dispatched[1][:payload][:purge_config].trigger_time
-      expect(Services[:dispatcher].dispatched).to match_array([expected_event, expected_event])
-    end
   end
 end
