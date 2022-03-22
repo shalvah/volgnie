@@ -15,29 +15,33 @@ provider:
   runtime: ruby2.7
   memorySize: 256
   logRetentionInDays: 30
-  lambdaHashingVersion: 20201221
   timeout: 30
   region: eu-central-1
   versionFunctions: false
   httpApi:
     shouldStartNameWithService: true
     payload: '1.0'
-  iamRoleStatements:
-    - Effect: Allow
-      Action: [ "sns:Publish" ]
-      Resource:
-        - "Fn::Join":
-            - ':'
-            - [ "arn:aws:sns", { Ref: AWS::Region }, { Ref: AWS::AccountId }, "purge_start" ]
-        - "Fn::Join":
-            - ':'
-            - [ "arn:aws:sns", { Ref: AWS::Region }, { Ref: AWS::AccountId }, "purge_finish" ]
-    - Effect: Allow
-      Action: [ "cloudwatch:PutMetricData" ]
-      Resource: [ "*" ]
-    - Effect: Allow
-      Action: [ "lambda:InvokeFunction" ]
-      Resource: [ "*" ]
+  iam:
+    role:
+      statements:
+      - Effect: Allow
+        Action: [ "sns:Publish" ]
+        Resource:
+          - "Fn::Join":
+              - ':'
+              - [ "arn:aws:sns", { Ref: AWS::Region }, { Ref: AWS::AccountId }, "purge_start" ]
+          - "Fn::Join":
+              - ':'
+              - [ "arn:aws:sns", { Ref: AWS::Region }, { Ref: AWS::AccountId }, "purge_ready" ]
+          - "Fn::Join":
+              - ':'
+              - [ "arn:aws:sns", { Ref: AWS::Region }, { Ref: AWS::AccountId }, "purge_finish" ]
+      - Effect: Allow
+        Action: [ "cloudwatch:PutMetricData" ]
+        Resource: [ "*" ]
+      - Effect: Allow
+        Action: [ "lambda:InvokeFunction" ]
+        Resource: [ "*" ]
   environment: ${file(./environment.yml)}
 
 package:
