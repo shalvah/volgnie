@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
 ENV["OTEL_LOG_LEVEL"] = case ENV["APP_ENV"]
-  when "development"; "debug"
-  when "test"; "fatal"
-  else "info"
+  when "development";
+    "debug"
+  when "test";
+    "fatal"
+  else
+    "info"
 end
 
 instrumentation_enabled = env_is_not?("test")
@@ -59,15 +62,18 @@ def lambda_transaction(context, payload = nil)
   Honeybadger.context({ aws_request_id: context.aws_request_id })
 
   tracer = OpenTelemetry.tracer_provider.tracer('custom')
-  tracer.in_span(
+  root_span = tracer.start_root_span(
     context.function_name,
     attributes: {
       'request.id' => context.aws_request_id,
     },
     kind: :server
-  ) do |span, span_context|
+  )
+  OpenTelemetry::Trace.with_span(root_span) do |span, span_context|
     span.set_attribute('user.id', payload["user"]["id"]) if payload
 
     yield span, span_context
   end
+ensure
+  root_span.finish
 end
