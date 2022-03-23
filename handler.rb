@@ -1,10 +1,15 @@
+# frozen_string_literal: true
+
 require 'bundler/setup'
 require_relative './app/bootstrap'
 require_relative './app/purge/purger'
 require_relative './app/purge/preparer'
 require_relative './app/purge/cleaner'
 
-at_exit { flush_traces }
+at_exit do
+  flush_traces
+  Honeybadger.stop
+end
 
 # Idempotent. If this function fails midway, simply retry.
 def start_purge(event:, context:)
@@ -74,7 +79,7 @@ end
 
 # Only meant for direct invocation, to test a specific piece of functionality
 def sanities(event:, context:)
-  Honeybadger.configure { |h| h.report_data = false }
+  Honeybadger.configure { |h| h.report_data = false } unless event == "errors"
   lambda_transaction(context) do
     require_relative "./sanities/#{event}"
   end
