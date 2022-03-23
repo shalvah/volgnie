@@ -10,7 +10,7 @@ require 'rack/protection'
 require_relative './web_helpers'
 require_relative './purge/criteria'
 
-set :sessions, expire_after: ONE_DAY
+set :sessions, expire_after: THREE_HOURS
 set :session_secret, ENV.fetch('SESSION_SECRET')
 set :views, settings.root + '/../views'
 
