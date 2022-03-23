@@ -38,7 +38,6 @@ module Purge
         batch_real_size: batch.size,
         total_size: followers.size,
       })
-      # todo all protected followers who you aren't following will be removed
       statuses = @criteria.check_batch(batch)
       followers_to_remove = batch.zip(statuses).flat_map do |follower, should_keep|
         should_keep ? [] : [follower]

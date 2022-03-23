@@ -9,7 +9,7 @@ module Purge
       new(user, following)
     end
 
-    def initialize(user, following, days_ago = 90)
+    def initialize(user, following, days_ago = 120)
       @user = AppUser.from(user)
       @following = following
       @days_ago = days_ago
