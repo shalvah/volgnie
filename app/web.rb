@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 
-at_exit do
-  flush_traces
-  Honeybadger.stop
-end
+at_exit { flush_traces }
 
 require 'sinatra'
 require_relative './bootstrap'

@@ -74,6 +74,9 @@ def lambda_transaction(context, payload = nil)
 
     yield span, span_context
   end
+rescue StandardError => e
+  Honeybadger.notify(e)
+  raise
 ensure
-  root_span.finish
+  root_span&.finish
 end

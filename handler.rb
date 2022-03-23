@@ -6,10 +6,7 @@ require_relative './app/purge/purger'
 require_relative './app/purge/preparer'
 require_relative './app/purge/cleaner'
 
-at_exit do
-  flush_traces
-  Honeybadger.stop
-end
+at_exit { flush_traces }
 
 # Idempotent. If this function fails midway, simply retry.
 def start_purge(event:, context:)

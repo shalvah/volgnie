@@ -3,7 +3,6 @@ Honeybadger.configure do |h|
   h.exceptions.ignore += ["Purge::DoneWithBatch"]
   h.env = ENV["APP_ENV"]
   h.breadcrumbs.enabled = true
-  h.report_data = true
 end
 
 require_relative './config'
