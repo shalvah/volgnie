@@ -1,8 +1,4 @@
 service: volgnie
-# app and org for use with dashboard.serverless.com
-#app: your-app-name
-#org: your-org-name
-
 frameworkVersion: '^3'
 useDotenv: true
 
@@ -66,7 +62,7 @@ package:
 functions:
 
   web:
-    handler: rack_adapter.handler
+    handler: rack_adapter.handler # The real web app code is in `app/web.rb`
     timeout: 10
     events:
       - httpApi: '*'

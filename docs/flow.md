@@ -6,32 +6,27 @@ The entry point is the home page. It's a basic landing page, then the user click
 
 This fires off an async event, `purge_start`, and immediately returns to another page, telling the user the purge has been started and they'll receive a report when it's done, along with an estimate of when (target time is < an hour).
 
-### `purge_start`
+### Event: `purge_start`
 When the `purge_start` event is fired, it is picked up by the `start_purge` Lambda. This function:
 - fetches and stores the user's following
-- fetches the user's followers (to a limit of 5k), and dispatches the `fetched_followers`event
+- fetches the user's followers (to a limit of 1k), and dispatches the `purge_ready`event
 
-### `fetched_followers`
-The `fetched_followers` event is handled by the `purge_followers` Lambda. For each follower in the batch, it runs the needed checks:
-- checks if the user follows them (don't purge)
-- checks if the user has interacted with them in recent times (don't purge)
+### Event: `purge_ready`
+The `purge_ready` event is handled by the `purge_followers` Lambda. It slices the follower list into batches and processes only the first. For each follower in the batch, it runs the needed checks, depending on the user's criteria (mutuals/interacted, etc). If the user fails the criteria, they are purged (block/unblock) and recorded. Then it sleeps until a set time (to avoid Twitter rate limits).
 
-If the user fails the criteria, they are purged (block/unblock) and recorded.
+When next it is woken up, it processes the next batch. When there are no more batches to be processed, the handler fires the `purge_finish` event.
 
-When this is done, the handler fires the `purge_finish` event.
+### Lambda: `push_next_batch`
+Responsible for waking up `purge_followers`. Runs on an interval and dispatches any batches due to be processed.
 
-### `purge_finish`
+### Event: `purge_finish`
 This event is handled by the `finish_purge` Lambda. It fetches the list of purged followers and:
 - sends an email report
 - records any final metrics
 - clears any unneeded data (such as the user's followers)
 
 ## Failure handling
-### What happens if a batch fails midway?
-- This means the batch won't be recorded as processed, and the data will be lost.
-
-#### Mitigation:
-Wrap every batch in an error handler. If a failure happens, serialise the batch's state (total, amount processed, amount not processed) and report the error so it can be retried manually later. Even better: automatic retries—schedule the function to re-run later.
-
-## What happens if a failure happens while dispatching batches?
-- We'll store the last pagination token for the user's followers. If the token is available
+All functions are designed to be idempotent, so they can be retried safely.
+- On retry, `start_purge` will simply re-fetch the data again and fire the next event
+- Each operation in `purge_finish` sets a cache key when it succeeds, so it won't run again if another op fails and entire fn is retried
+- `purge_followers` fails to a Dead Letter Queue, preserving the payload. It also stores the number of batches processed. On retry, it skips past the batches processed and (re-)processes the next batch. Reprocessing a batch is cheap (only 10 users)

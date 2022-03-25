@@ -23,6 +23,7 @@ module Purge
       tasks = [Thread.new { report }, Thread.new { record }]
       tasks.map(&:join)
       @cache.del("purged-followers-#{@user.id}")
+      @cache.del("purge-#{@user.id}-batches-processed")
     end
 
     def report

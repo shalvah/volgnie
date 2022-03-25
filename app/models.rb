@@ -1,3 +1,7 @@
+# frozen_string_literal: true
+
+# Basic structs so we don't have to struggle with "is it hash[:key] or hash['key']?" all the time
+
 # Example:
 # {
 #   "username": "theshalvah",
