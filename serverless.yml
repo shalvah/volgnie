@@ -100,7 +100,7 @@ functions:
   sanities:
     handler: handler.sanities
 
-  # For local/manual retry of the purge_followers function
+  # For manual retry of failed functions, pulling payloads from the DLQ in Redis
   retry:
     handler: handler.retry
     timeout: 50

@@ -6,8 +6,6 @@ require_relative './app/purge/purger'
 require_relative './app/purge/preparer'
 require_relative './app/purge/cleaner'
 
-at_exit { flush_traces }
-
 # Idempotent. If this function fails midway, simply retry.
 def start_purge(event:, context:)
   payload = get_sns_payload event
@@ -83,15 +81,23 @@ def sanities(event:, context:)
 end
 
 def retry(event:, context:)
-  original_event = event["original"] || JSON.parse(File.read("tmp/event_data.json"))
-  raise "Couldn't find any event data" if !original_event
+  full_name = "volgnie-dev-#{event["function"]}"
+  events = Services[:cache].lrange("purge-dlq-#{full_name}", 0, -1)
+  raise "Couldn't find any event data" if events.nil? || events.empty?
 
   lambda_client = (ENV["IS_OFFLINE"] || ENV["IS_LOCAL"]) ?
     Aws::Lambda::Client.new({ endpoint: 'http://localhost:3002' })
     : Aws::Lambda::Client.new
-  lambda_client.invoke({
-    function_name: "volgnie-dev-purge_followers",
-    invocation_type: "Event",
-    payload: original_event,
-  })
+  events.each do |original_event|
+    lambda_client.invoke({
+      function_name: full_name,
+      invocation_type: "Event",
+      payload: {
+        "Records" => [
+          { "Sns" => { "Message" => original_event } }
+        ]
+      }.to_json
+    })
+    Services[:cache].del("purge-dlq-#{full_name}")
+  end
 end

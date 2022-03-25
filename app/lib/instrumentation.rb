@@ -76,7 +76,14 @@ def lambda_transaction(context, payload = nil)
   end
 rescue StandardError => e
   Honeybadger.notify(e)
+  root_span.record_exception(e)
+  root_span.status = OpenTelemetry::Trace::Status.error("Unhandled exception of type: #{e.class}")
+
+  # Using a custom DLQ impl, because AWS' is too restrictive here
+  key = "purge-dlq-#{context.function_name}"
+  Services[:cache].rpush(key, payload.to_json)
   raise
 ensure
   root_span&.finish
+  flush_traces
 end

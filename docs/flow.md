@@ -29,4 +29,4 @@ This event is handled by the `finish_purge` Lambda. It fetches the list of purge
 All functions are designed to be idempotent, so they can be retried safely.
 - On retry, `start_purge` will simply re-fetch the data again and fire the next event
 - Each operation in `purge_finish` sets a cache key when it succeeds, so it won't run again if another op fails and entire fn is retried
-- `purge_followers` fails to a Dead Letter Queue, preserving the payload. It also stores the number of batches processed. On retry, it skips past the batches processed and (re-)processes the next batch. Reprocessing a batch is cheap (only 10 users)
+- `purge_followers` fails to a custom Dead Letter Queue implementation, preserving the payload. It also stores the number of batches processed. On retry, it skips past the batches processed and (re-)processes the next batch. Reprocessing a batch is cheap (only 10 users)
