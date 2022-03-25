@@ -17,13 +17,12 @@ RSpec.describe "Purge::Preparer" do
   end
 
   it "fetches followers" do
-    expect(mock_twitter).to receive(:get_followers) do |id, limit, options = {}, &block|
-      catch(:stop_chunks) { user[:followers].each_slice(3) { |chunk| block.call(chunk, {}) } }
-    end
+    limit = 9
+    expect(mock_twitter).to receive(:get_followers).and_return user[:followers].first(limit)
 
-    preparer = Purge::Preparer.new(user_payload, mock_twitter, mock_redis, 9)
+    preparer = Purge::Preparer.new(user_payload, mock_twitter, mock_redis, limit)
 
-    expect(preparer.fetch_followers).to match(user[:followers][0..8])
+    expect(preparer.fetch_followers).to match(user[:followers][0..(limit -1)])
   end
 
   it "saves following" do

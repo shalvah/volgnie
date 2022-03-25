@@ -43,9 +43,7 @@ RSpec.describe "handlers" do
       end
 
       def get_followers(id, limit, options = {}, &block)
-        catch(:stop_chunks) do
-          User[:followers].each_slice(AppConfig[:default_follower_limit]) { |s| block.call(s, {}) }
-        end
+        User[:followers].first(AppConfig[:default_follower_limit])
       end
 
       def block(source_user_id, target_user_id) end
