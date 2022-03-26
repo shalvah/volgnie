@@ -27,7 +27,6 @@ class AppConfig
   }
 
   Configs = {
-    purge_lock_duration: 12 * 60 * 60, # Can't trigger a purge until 12 hours after the last trigger
     default_follower_limit: 1000,
     resume_batch_in_seconds: 300,
     admins: [

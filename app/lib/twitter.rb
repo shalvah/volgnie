@@ -106,20 +106,6 @@ class TwitterApi
         end
       end
 
-      if options[:chunked]
-        catch(:stop_chunks) do
-          block.call(data, response["meta"])
-          pagination_token = response["meta"]["next_token"]
-          while pagination_token
-            query_params["pagination_token"] = pagination_token
-            response = raw_request(name, method, endpoint, query_params, body: body)
-            block.call(response["data"], response["meta"])
-            pagination_token = response["meta"]["next_token"]
-          end
-        end
-        return
-      end
-
       data
     end
   end
