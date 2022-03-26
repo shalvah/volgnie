@@ -5,5 +5,5 @@ preferences.arc
 .env.dev
 .env.prod
 .serverless-rack-temp
-vendor/bundle
+vendor/
 tmp/
