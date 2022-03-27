@@ -28,6 +28,7 @@
           font-size: 1em;
           border: 0;
           border-radius: 5px;
+          color: whitesmoke;
           text-align: center;
           vertical-align: middle;
           cursor: pointer;
@@ -44,6 +45,11 @@
           border-radius: 5px;
           display: block;
           min-width: 30%;
+          background-color: transparent;
+      }
+
+      a {
+          color: whitesmoke;
       }
   </style>
   <title>Start your purge</title>
@@ -57,14 +63,16 @@ Hi, @<%= current_user["username"] %>!
 </p>
 
 <p>
-  We'll go through <%= current_user_follower_limit_text %> followers and remove those matching your criteria. Then we'll send you a report of the followers we removed, via email. Ready to begin?
+  We'll go through <%= current_user_follower_limit_text %> followers and remove those matching your criteria. Then we'll
+  send you a report of the followers we removed via email. Ready to begin?
 </p>
 
 <% if current_user.protected %>
 
   <h3>Whoops...</h3>
 
-  Unfortunately, your account is <strong>protected</strong>. You'll need to unlock your account for the purge to work. You can lock
+  Unfortunately, your account is <strong>protected</strong>. You'll need to unlock your account for the purge to work.
+  You can lock
   your account again when the purge is complete (we'll send you an email).
 
   <form action="/purge/refresh-account" method="post">
@@ -76,54 +84,61 @@ Hi, @<%= current_user["username"] %>!
       </button>
     </div>
   </form>
-  <% else %>
-<form action="/purge/start" method="post">
-  <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
+<% else %>
+  <form action="/purge/start" method="post">
+    <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
 
-  <br>
-  👉 Choose a purge level:
-  <br>
-  <label>
-    <%= Purge::Criteria::to_text(Purge::Criteria::MUTUAL) %>
-    <input type="radio" name="level" value="<%= Purge::Criteria::MUTUAL %>" required>
-  </label>
-  <br>
-  <label>
-    <%= Purge::Criteria::to_text(Purge::Criteria::MUST_HAVE_REPLIED_TO) %>
-    <input type="radio" name="level" value="<%= Purge::Criteria::MUST_HAVE_REPLIED_TO %>" required>
-  </label>
-  <br>
-  <label>
-    <%= Purge::Criteria::to_text(Purge::Criteria::MUST_HAVE_INTERACTED) %>
-    <input type="radio" name="level" value="<%= Purge::Criteria::MUST_HAVE_INTERACTED %>" required>
-  </label>
-
-  <br>
-  <br>
-  <em>Note: protected accounts will be removed unless you follow them or have replied to them.</em>
-  <br>
-  <br>
-  <label>
-    👉 Where should we send the report to?
-    <input type="email" name="email" placeholder="Your email address" required>
-  </label>
-
-  <br>
-  <% if AppConfig.get(:admins).include? current_user["username"] %>
+    <br>
+    👉 Choose a purge level:
+    <br>
     <label>
-      Simulate?
-      <input type="checkbox" name="__simulate" checked>
-      <br>
+      <%= Purge::Criteria::to_text(Purge::Criteria::MUTUAL) %>
+      <input type="radio" name="level" value="<%= Purge::Criteria::MUTUAL %>" required>
     </label>
-  <% end %>
+    <br>
+    <label>
+      <%= Purge::Criteria::to_text(Purge::Criteria::MUST_HAVE_REPLIED_TO) %>
+      <input type="radio" name="level" value="<%= Purge::Criteria::MUST_HAVE_REPLIED_TO %>" required>
+    </label>
+    <br>
+    <label>
+      <%= Purge::Criteria::to_text(Purge::Criteria::MUST_HAVE_INTERACTED) %>
+      <input type="radio" name="level" value="<%= Purge::Criteria::MUST_HAVE_INTERACTED %>" required>
+    </label>
 
+    <br>
+    <br>
+    <em>Note: protected accounts will be removed unless you follow them or have replied to them.</em>
+    <br>
+    <br>
+    <label>
+      👉 Where should we send the report to?
+      <input type="email" name="email" placeholder="Your email address" required>
+    </label>
+
+    <br>
+    <% if AppConfig.get(:admins).include? current_user["username"] %>
+      <label>
+        Simulate?
+        <input type="checkbox" name="__simulate" checked>
+        <br>
+      </label>
+    <% end %>
+
+    <br>
+    <div>
+      <button type="submit">
+        Purge my followers
+      </button>&nbsp;&nbsp;
+      <a href="/">🠐 Go Back</a>
+    </div>
+  </form>
+<% end %>
+
+<div>
   <br>
-  <div>
-    <button type="submit">
-      Purge my followers
-    </button>
-  </div>
-</form>
-  <% end %>
+  <a href="https://github.com/shalvah/volgnie/" style="font-size: 0.8em;" target="_blank">It's open source🐱</a>
+</div>
+
 </body>
 </html>
