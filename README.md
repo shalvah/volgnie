@@ -4,7 +4,6 @@ If, like me, you *don't* like having too many Twitter followers, you've come to 
 
 To use, go to [volgnie.com](https://volgnie.com), or read on for technical details.
 
-## Technical details
 ## Tooling
 - Ruby 2.7 and Node.js 14+
 - [Serverless framework](http://serverless.com)
