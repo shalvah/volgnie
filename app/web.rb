@@ -59,7 +59,7 @@ end
 
   get '/purge/start' do
     redirect '/' if !current_user
-    erb current_user.protected ? :unlock_account : :start
+    erb :start
   end
 
   post '/purge/refresh-account' do

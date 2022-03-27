@@ -1,45 +1,129 @@
 <html lang="en">
-<title>Purge your Twitter followers</title>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<h1>Yo, it's Volgnie</h1>
+  <style>
+      @import url('https://fonts.googleapis.com/css?family=Alata');
+
+      body {
+          font-family: 'Alata', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', Calibri, sans-serif;
+          height: 100%;
+          box-sizing: border-box;
+          padding: 40px 20px;
+          font-size: 1.2em;
+          color: whitesmoke;
+          background-color: #181A1B;
+          text-align: center;
+      }
+
+      button {
+          font-family: 'Alata', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', Calibri, sans-serif;
+          padding: 5px 20px;
+          font-size: 1em;
+          border: 0;
+          border-radius: 5px;
+          text-align: center;
+          vertical-align: middle;
+          cursor: pointer;
+      }
+
+      button.sign-in, a.purge {
+          font-size: 1em;
+          border: 0;
+          border-radius: 5px;
+          text-align: center;
+          vertical-align: middle;
+          cursor: pointer;
+          background-color: #006633;
+      }
+
+
+      .link-as-button {
+          padding: 5px 20px;
+          text-decoration: none;
+          font-size: 1em;
+          border: 0;
+          border-radius: 5px;
+          text-align: center;
+          vertical-align: middle;
+          color: whitesmoke;
+      }
+
+      .button-as-link {
+          font-size: 0.8em;
+          background: none;
+          border: none;
+          color: white;
+          cursor: pointer;
+          display: inline;
+      }
+
+      .button-as-link:hover {
+          color: #3391FF;
+          text-decoration: underline;
+      }
+  </style>
+  <title>Purge your Twitter followers</title>
+</head>
+<body>
+
+<h1>Hi, I'm Volgnie</h1>
+
+Do you want <span style="color: #FF0066">fewer</span> Twitter followers? I can help you remove up to 1,000, based on the criteria you
+pick.
+
 
 <% if has_flash_error %>
+  <br>
   <div>
     Error: <%= get_flash_error %>
   </div>
 <% end %>
 
-
-<% if current_user %>
-  <div>
-    You're currently signed in as <b><%= current_user["username"] %>.</b>
-  </div>
-  <div>
-    <a href="/purge/start">Start Purge</a>
-  </div>
-<% end %>
+<br>
+<br>
 
 <div>
-  <form action="/auth/twitter" method="post">
-    <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
-
+  <% if current_user %>
+    <br>
     <div>
-      <button type="submit">
-        <%= current_user ? "Sign in as a different account" : "Sign in with Twitter" %>
-      </button>
+      <span style="font-size: medium">You're currently signed in as <b><%= current_user["username"] %>.</b></span>
+      <br>
+      <br>
+      <a href="/purge/start" class="link-as-button purge">Start Purge</a>
+      <br>
+      <br>
     </div>
-  </form>
+  <% else %>
+    <form action="/auth/twitter" method="post">
+      <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
+
+      <div>
+        <button type="submit" class="sign-in">
+          Sign in with Twitter →
+        </button>
+      </div>
+    </form>
+  <% end %>
 </div>
 
 <% if current_user %>
-  <div>
-    <form action="/auth/logout" method="post">
-      <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
-      <div>
-        <button type="submit">Log out</button>
-      </div>
-    </form>
+  <form action="/auth/twitter" method="post">
+    <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
+
+    <button type="submit" class="button-as-link">
+      Sign in as a different account
+    </button>
+  </form>
+  <form action="/auth/logout" method="post">
+    <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
+    <div>
+      <button type="submit" class="button-as-link">Log out</button>
+    </div>
+  </form>
   </div>
 <% end %>
 
+</body>
 </html>
