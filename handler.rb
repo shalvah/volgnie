@@ -84,21 +84,24 @@ def retry(event:, context:)
   full_name = "volgnie-dev-#{event["function"]}"
   count = event["count"] || 10000
   raise "Couldn't find any event data" unless Services[:cache].exists("purge-dlq-#{full_name}")
-  events = Services[:cache].lpop("purge-dlq-#{full_name}", count)
 
   lambda_client = (ENV["IS_OFFLINE"] || ENV["IS_LOCAL"]) ?
     Aws::Lambda::Client.new({ endpoint: 'http://localhost:3002' })
     : Aws::Lambda::Client.new
-  events.each do |original_event|
+
+  # Unfortunately, LPOP's `count` arg is only supported on Redis 6.2+, so we manually iterate
+  fetched = 0
+  while fetched != count && (event = Services[:cache].lpop("purge-dlq-#{full_name}"))
     lambda_client.invoke({
       function_name: full_name,
       invocation_type: "Event",
       payload: {
         "Records" => [
-          { "Sns" => { "Message" => original_event } }
+          { "Sns" => { "Message" => event } }
         ]
       }.to_json
     })
+    fetched += 1
   end
-  events.size
+  fetched
 end
