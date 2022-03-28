@@ -14,7 +14,7 @@ in_web_context = defined?(Sinatra)
 
 if instrumentation_enabled
   # We'll manually force send after each request
-  ENV["OTEL_BSP_SCHEDULE_DELAY"] = "1000"
+  ENV["OTEL_BSP_SCHEDULE_DELAY"] = "30000"
 
   # Configure the OTLP exporter
   ENV["OTEL_EXPORTER_OTLP_ENDPOINT"] = "https://otlp.eu01.nr-data.net"
