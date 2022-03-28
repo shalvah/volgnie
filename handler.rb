@@ -82,9 +82,9 @@ end
 
 def retry(event:, context:)
   full_name = "volgnie-dev-#{event["function"]}"
-  count = event["count"] || 0
-  events = Services[:cache].lrange("purge-dlq-#{full_name}", 0, count - 1)
-  raise "Couldn't find any event data" if events.nil? || events.empty?
+  count = event["count"] || 10000
+  raise "Couldn't find any event data" unless Services[:cache].exists("purge-dlq-#{full_name}")
+  events = Services[:cache].lpop("purge-dlq-#{full_name}", count)
 
   lambda_client = (ENV["IS_OFFLINE"] || ENV["IS_LOCAL"]) ?
     Aws::Lambda::Client.new({ endpoint: 'http://localhost:3002' })
