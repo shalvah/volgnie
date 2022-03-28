@@ -22,18 +22,15 @@ if instrumentation_enabled
   ENV["OTEL_EXPORTER_OTLP_TRACES_COMPRESSION"] = "none"
 
   ENV["OTEL_TRACES_EXPORTER"] = "none" # We override this later in this file for non-test env
-  # COnfigure the TraceIdRatioBased with a prob of 1
+  # COnfigure the TraceIdRatioBased sampler
   ENV["OTEL_TRACES_SAMPLER"] = "traceidratio"
-  ENV["OTEL_TRACES_SAMPLER_ARG"] = "1"
-  ENV["OTEL_RESOURCE_ATTRIBUTES"] = "SampleRate=1"
+  ENV["OTEL_TRACES_SAMPLER_ARG"] = "0.4" # Keep 40% of requests
 end
 
 require 'opentelemetry/sdk'
 require 'opentelemetry/exporter/otlp'
 require 'opentelemetry/instrumentation/sinatra'
 require 'opentelemetry/instrumentation/restclient'
-require 'opentelemetry/instrumentation/redis'
-require 'opentelemetry/instrumentation/aws_sdk'
 
 OpenTelemetry::SDK.configure do |c|
   c.resource = OpenTelemetry::SDK::Resources::Resource.create({
@@ -49,8 +46,6 @@ OpenTelemetry::SDK.configure do |c|
 
     c.use('OpenTelemetry::Instrumentation::Sinatra') if in_web_context
     c.use 'OpenTelemetry::Instrumentation::RestClient'
-    # c.use 'OpenTelemetry::Instrumentation::Redis', { db_statement: :include }
-    # c.use 'OpenTelemetry::Instrumentation::AwsSdk'
   end
 end
 

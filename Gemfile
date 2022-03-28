@@ -28,13 +28,14 @@ group :test do
 end
 
 group :development do
-  # For debugging
+  # For debugging with Ray <http://myray.app>
   # Usage: require 'ray'; ray(thing)
   gem "ruby-ray"
 end
 
-# Adding these so serverless-rack + serverless-offline uses the local packed gems,
-# not the global Ruby ones, which causes conflicts
+# These are core Ruby gems, but I'm including them
+# so serverless-rack + serverless-offline uses the local packed gems,
+# not my global Ruby ones, which causes conflicts
 gem "base64"
 gem "date"
 gem "erb"
@@ -46,6 +47,4 @@ gem "opentelemetry-sdk", "~> 1.0"
 gem "opentelemetry-exporter-otlp", "~> 0.21.2"
 gem "opentelemetry-instrumentation-restclient", "~> 0.19.3"
 gem "opentelemetry-instrumentation-sinatra", "~> 0.19.3"
-gem "opentelemetry-instrumentation-redis", "~> 0.21.3"
-gem "opentelemetry-instrumentation-aws_sdk", "~> 0.2.2"
 
