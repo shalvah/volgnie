@@ -62,83 +62,101 @@ Hi, @<%= current_user["username"] %>!
   You have <b><%= current_user["public_metrics"]["followers_count"] %></b> followers.
 </p>
 
-<p>
-  We'll go through <%= current_user_follower_limit_text %> followers and remove those matching your criteria. Then we'll
-  send you a report of the followers we removed via email. Ready to begin?
-</p>
+<% if current_user["public_metrics"]["following_count"] > 5000 %>
+  <p>
+    Unfortunately, we can't purge your followers at this time.😢
+  </p>
 
-<% if current_user.protected %>
+  <p>
+    That's because you're <i>following</i> too many people
+    (<%= current_user["public_metrics"]["following_count"] %> people),
+    and we need to compare each of your followers against this list.
+    If you really want to get rid of your followers, you can use one of the tools out there to
+    reduce your following first.
+  </p>
 
-  <h3>Whoops...</h3>
-
-  Unfortunately, your account is <strong>protected</strong>. You'll need to unlock your account for the purge to work.
-  You can lock
-  your account again when the purge is complete (we'll send you an email).
-
-  <form action="/purge/refresh-account" method="post">
-    <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
-    <br>
-    <div>
-      <button type="submit">
-        I've unlocked my account
-      </button>
-    </div>
-  </form>
 <% else %>
-  <form action="/purge/start" method="post">
-    <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
 
-    <br>
-    👉 Choose a purge level:
-    <br>
-    <label>
-      <%= Purge::Criteria::to_text(Purge::Criteria::MUTUAL) %>
-      <input type="radio" name="level" value="<%= Purge::Criteria::MUTUAL %>" required>
-    </label>
-    <br>
-    <label>
-      <%= Purge::Criteria::to_text(Purge::Criteria::MUST_HAVE_REPLIED_TO) %>
-      <input type="radio" name="level" value="<%= Purge::Criteria::MUST_HAVE_REPLIED_TO %>" required>
-    </label>
-    <br>
-    <label>
-      <%= Purge::Criteria::to_text(Purge::Criteria::MUST_HAVE_INTERACTED) %>
-      <input type="radio" name="level" value="<%= Purge::Criteria::MUST_HAVE_INTERACTED %>" required>
-    </label>
+  <p>
+    We'll go through <%= current_user_follower_limit_text %> followers and remove those matching your criteria. Then
+    we'll
+    send you a report of the followers we removed via email. Ready to begin?
+  </p>
 
-    <br>
-    <br>
-    <em>Note: protected accounts will be removed unless you follow them or have replied to them.</em>
-    <br>
-    <br>
-    <label>
-      👉 Where should we send the report to?
-      <input type="email" name="email" placeholder="Your email address" required>
-    </label>
+  <% if current_user.protected %>
 
-    <br>
-    <% if AppConfig.get(:admins).include? current_user["username"] %>
+    <h3>Whoops...</h3>
+
+    Unfortunately, your account is <strong>protected</strong>. You'll need to unlock your account for the purge to work.
+    You can lock
+    your account again when the purge is complete (we'll send you an email).
+
+    <form action="/purge/refresh-account" method="post">
+      <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
+      <br>
+      <div>
+        <button type="submit">
+          I've unlocked my account
+        </button>
+      </div>
+    </form>
+  <% else %>
+    <form action="/purge/start" method="post">
+      <input type="hidden" name="authenticity_token" value='<%= csrf_token %>'>
+
+      <br>
+      👉 Choose a purge level:
+      <br>
       <label>
-        Simulate?
-        <input type="checkbox" name="__simulate" checked>
-        <br>
+        <%= Purge::Criteria::to_text(Purge::Criteria::MUTUAL) %>
+        <input type="radio" name="level" value="<%= Purge::Criteria::MUTUAL %>" required>
       </label>
-    <% end %>
+      <br>
+      <label>
+        <%= Purge::Criteria::to_text(Purge::Criteria::MUST_HAVE_REPLIED_TO) %>
+        <input type="radio" name="level" value="<%= Purge::Criteria::MUST_HAVE_REPLIED_TO %>" required>
+      </label>
+      <br>
+      <label>
+        <%= Purge::Criteria::to_text(Purge::Criteria::MUST_HAVE_INTERACTED) %>
+        <input type="radio" name="level" value="<%= Purge::Criteria::MUST_HAVE_INTERACTED %>" required>
+      </label>
 
-    <br>
-    <div>
-      <button type="submit">
-        Purge my followers
-      </button>&nbsp;&nbsp;
-      <a href="/">🠐 Go Back</a>
-    </div>
-  </form>
-<% end %>
+      <br>
+      <br>
+      <em>Note: protected accounts will be removed unless you follow them or have replied to them.</em>
+      <br>
+      <br>
+      <label>
+        👉 Where should we send the report to?
+        <input type="email" name="email" placeholder="Your email address" required>
+      </label>
+
+      <br>
+      <% if AppConfig.get(:admins).include? current_user["username"] %>
+        <label>
+          Simulate?
+          <input type="checkbox" name="__simulate" checked>
+          <br>
+        </label>
+      <% end %>
+
+      <br>
+      <div>
+        <button type="submit">
+          Purge my followers
+        </button>&nbsp;&nbsp;
+        <a href="/">🠐 Go Back</a>
+      </div>
+    </form>
+  <% end %>
 
 <div>
   <br>
   <a href="https://github.com/shalvah/volgnie/" style="font-size: 0.8em;" target="_blank">It's open source🐱</a>
 </div>
+
+<% end %>
 
 </body>
 </html>

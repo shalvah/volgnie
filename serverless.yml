@@ -70,7 +70,7 @@ functions:
   start_purge:
     handler: handler.start_purge
     timeout: 90
-    maximumRetryAttempts: 2
+    maximumRetryAttempts: 0
     events:
       - sns: purge_start
 
