@@ -85,7 +85,6 @@ def retry(event:, context:)
   count = event["count"] || 0
   events = Services[:cache].lrange("purge-dlq-#{full_name}", 0, count - 1)
   raise "Couldn't find any event data" if events.nil? || events.empty?
-  Services[:cache].del("purge-dlq-#{full_name}") # Not atomic, but we'll worry about that later
 
   lambda_client = (ENV["IS_OFFLINE"] || ENV["IS_LOCAL"]) ?
     Aws::Lambda::Client.new({ endpoint: 'http://localhost:3002' })
