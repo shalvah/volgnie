@@ -2,6 +2,9 @@
 
 If, like me, you *don't* like having too many Twitter followers, you've come to the right place. Volgnie helps you easily purge your Twitter followers. Pick from one of the available criteria, and any followers that don't meet it will be removed (by blocking/unblocking them). 
 
+> Note
+> Retired. This project is retired. I'm tired of struggling with Twitter. Perhaps later, I'll resurrect it as a self-service option
+
 To use, go to [volgnie.com](https://volgnie.com), or read on for technical details.
 
 ## Tooling
@@ -45,6 +48,16 @@ The Twitter API's search only returns results from a few days, so I had to build
   ```bash
   npm run offline
   ```
+  
+### Twitter App Setup
+- Create a Twitter app in the Twitter Developer Portal, get your API key and secret. Then go to your app's settings and edit the User Authentication Settings:
+- select "Read and Write" under App Permissions
+- Leave "Request email from users" off
+- Select "Web App" under Type of App
+
+Redirect URLs:
+- http://ocalhost:9787/auth/twitter/callback
+- https://volgnie.com/auth/twitter/callback
 
 ## Testing
 Tests are written with RSpec. To run tests: `bundle exec rspec`
